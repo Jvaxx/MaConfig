@@ -44,7 +44,7 @@ vim.cmd.colorscheme("catppuccin")
 
 -- INFO: formatting and syntax highlighting
 vim.pack.add({ "https://github.com/nvim-treesitter/nvim-treesitter" }, { confirm = false })
-local required_parsers = { "c", "cpp", "lua", "vim", "vimdoc", "query", "rust", "go" }
+local required_parsers = { "c", "cpp", "lua", "vim", "vimdoc", "query", "rust", "go", "python" }
 local config = require("nvim-treesitter.config")
 local missing_parsers = vim.iter(required_parsers):filter(function(parser)
   return not vim.tbl_contains(config.get_installed(), parser)
@@ -87,6 +87,16 @@ local lsp_servers = {
   clangd = {},
   rust_analyzer = {},
   gopls = {},
+  pyright = {
+    python = {
+      analysis = {
+        typeCheckingMode = "basic", -- ou "strict" pour typer fortement
+        autoSearchPaths = true,
+        useLibraryCodeForTypes = true,
+      }
+    }
+  },
+  ruff = {}, -- Formattage
 }
 
 -- INFO: Barre des buffers (onglets style LazyVim)
