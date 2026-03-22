@@ -1,0 +1,74 @@
+**Réglages**
+*Desktop and docks*
+-...
+
+*Trackpad et keyboard*
+-...
+-three fingers drag dans accessibility
+
+*Aldente installé*
+*Control center settings modifiés*
+
+*Suspension des maj*
+-en mode recovery (maintenir bouton start enfoncé): csrutil disable
+-puis dans l'os démarré: sudo launchctl disable system/com.apple.softwareupdated
+-puis réactiver SIP, en mode recov: csrutil enable
+
+*Installation homebrew*
+
+*Réduction des animations*
+-defaults write com.apple.dock autohide-delay -float 0
+-defaults write com.apple.dock autohide-time-modifier -float 0
+-defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
+-defaults write -g QLPanelAnimationDuration -float 0
+-defaults write com.apple.dock launchanim -bool false
+-defaults write com.apple.dock expose-animation-duration -float 0
+-killall Finder && killall Dock
+
+*Rendre le clavier plus rapide*
+-defaults write -g KeyRepeat -int 1
+-defaults write -g InitialKeyRepeat -int 10
+-defaults write -g ApplePressAndHoldEnabled -bool false
+
+*Modifications des settings de finder*
+-Au bon sens
+
+*Installation de ghostty & Co par homebrew*
+-brew install --cask ghostty
+-brew install bob
+-bob install nightly
+-touch .zshrc
+-bob use nightly
+
+*Installation de Yabai & Co*
+-installation de skhd: brew install asmvik/formulae/skhd
+-skhd --start-service
+-Désactivation partielle du SIP pour yabai (suivre documentation)
+-Installation de yabai avec le scripting addition (suivre doc, petite galère de mon côté)
+
+*Modification du zshrc*
+-voir github?
+-coloration synthaxique avec un paquet homebrew
+
+*Modification de ghostty*
+-voir github?
+
+*Installation d'apps*
+-Zen browser par leur site puis configuration de zen:
+    -raccourcis Pip sur ctrl shift %
+    -modifications de tous les raccourcis commençant par cmd par ctrl
+    -zen mod: ghost tab
+    -privacy: strict
+    -addon: dark reader, Youtube No Translation, UBO, tampermonkey + vaft, sponsorblock
+    -addons custom: Bypass Paywall Clean, TwitchNoSub
+
+-LocalSend par cask homebrew
+-vlc par cask
+-maccy par cask
+-vscode par cask
+-btop
+-lmstudio par cask
+
+*Installations des clés ssh et alias*
+-pc fixe, rpi5
+
