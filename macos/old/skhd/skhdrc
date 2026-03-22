@@ -1,0 +1,43 @@
+lcmd - j : yabai -m window --focus south
+lcmd - k : yabai -m window --focus north
+lcmd - h : yabai -m window --focus west
+lcmd - l : yabai -m window --focus east
+
+shift + lcmd - y : yabai -m space --mirror y-axis
+shift + lcmd - x : yabai -m space --mirror x-axis
+shift + lcmd - t : yabai -m window --toggle float --grid 4:4:1:1:2:2
+
+shift + lcmd - f : yabai -m window --toggle zoom-fullscreen
+shift + lcmd - e : yabai -m space --balance
+
+shift + lcmd - j : yabai -m window --swap south
+shift + lcmd - k : yabai -m window --swap north
+shift + lcmd - h : yabai -m window --swap west
+shift + lcmd - l : yabai -m window --swap east
+
+ctrl + lcmd - j : yabai -m window --warp south
+ctrl + lcmd - k : yabai -m window --warp north
+ctrl + lcmd - h : yabai -m window --warp west
+ctrl + lcmd - l : yabai -m window --warp east
+
+# Agrandir largeur vers la droite (Alt+Shift+))
+shift + lcmd - 0x18 : yabai -m window --resize right:40:0
+
+# Rétrécir largeur depuis la droite (Alt+Shift+-)
+shift + lcmd - 0x1B : yabai -m window --resize right:-40:0
+
+# Bouger les fenêtres entre les espaces
+shift + lcmd - 0x12 : yabai -m window --space 1; yabai -m space --focus 1
+shift + lcmd - 0x13 : yabai -m window --space 2; yabai -m space --focus 2
+shift + lcmd - 0x14 : yabai -m window --space 3; yabai -m space --focus 3
+shift + lcmd - 0x15 : yabai -m window --space 4; yabai -m space --focus 4
+shift + lcmd - 0x17 : yabai -m window --space 5; yabai -m space --focus 5
+
+lcmd - 0x12 : yabai -m space --focus 1
+lcmd - 0x13 : yabai -m space --focus 2
+lcmd - 0x14 : yabai -m space --focus 3
+lcmd - 0x15 : yabai -m space --focus 4
+lcmd - 0x17 : yabai -m space --focus 5
+
+lcmd - 0x24 : osascript -e 'tell application "Ghostty"' -e 'if it is running then' -e 'activate' -e 'tell application "System Events" to keystroke "n" using {command down}' -e 'else' -e 'activate' -e 'end if' -e 'end tell'
+

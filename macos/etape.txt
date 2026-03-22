@@ -1,3 +1,5 @@
+Configuration de macos dans les grandes lignes
+
 **Réglages**
 *Desktop and docks*
 -...
@@ -47,11 +49,11 @@
 -Installation de yabai avec le scripting addition (suivre doc, petite galère de mon côté)
 
 *Modification du zshrc*
--voir github?
+-voir github
 -coloration synthaxique avec un paquet homebrew
 
 *Modification de ghostty*
--voir github?
+-voir github
 
 *Installation d'apps*
 -Zen browser par leur site puis configuration de zen:
@@ -70,5 +72,13 @@
 -lmstudio par cask
 
 *Installations des clés ssh et alias*
--pc fixe, rpi5
+-pc fixe, rpi5, github
+
+*Swap right cmd et right alt*
+Glisser le fichier com.user.keymapping.plist dans /home/Users/jvz/Library/LaunchAgents/
+
+*Installation de starship*
+-brew install starship
+-Ajout de ceci dans le zshrc: eval "$(starship init zsh)"
+-Utilisation du même starship.toml que sur omarchy
 
