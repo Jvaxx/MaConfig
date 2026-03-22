@@ -99,6 +99,19 @@ local lsp_servers = {
   ruff = {}, -- Formattage
 }
 
+-- INFO: Autopairs (fermeture automatique des délimiteurs)
+vim.pack.add({ "https://github.com/windwp/nvim-autopairs" }, { confirm = false })
+
+require("nvim-autopairs").setup({
+  check_ts = true,                -- Utilise Treesitter pour analyser le contexte
+  ts_config = {
+    lua = { "string", "source" }, -- Ne pas ajouter de paires dans les strings lua
+    python = { "string" },        -- Ne pas ajouter de paires dans les strings python
+  },
+  disable_filetype = { "TelescopePrompt", "vim" },
+  fast_wrap = {}, -- Permet d'envelopper rapidement un mot avec <M-e> (Alt+e)
+})
+
 -- INFO: Barre des buffers (onglets style LazyVim)
 vim.pack.add({ "https://github.com/akinsho/bufferline.nvim" }, { confirm = false })
 require("bufferline").setup({
