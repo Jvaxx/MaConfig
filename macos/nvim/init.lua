@@ -23,7 +23,7 @@ vim.opt.wrap = false
 
 -- formatting
 vim.opt.tabstop = 4
-vim.opt.shiftwidth = 2
+vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.textwidth = 90
 
@@ -71,7 +71,7 @@ require("blink.cmp").setup({
     ['<S-Tab>'] = { 'snippet_backward', 'fallback' },
     ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
     ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
-    ['<leader>k'] = { 'show_signature', 'hide_signature', 'fallback' },
+    -- ['<leader>k'] = { 'show_signature', 'hide_signature', 'fallback' },
   },
   fuzzy = {
     implementation = "lua",
@@ -319,6 +319,13 @@ require("which-key").setup({
 
 -- INFO: Barre des buffers (onglets style LazyVim)
 vim.pack.add({ "https://github.com/akinsho/bufferline.nvim" }, { confirm = false })
+
+-- INFO: Mise en évidence des tags dans les commentaires
+vim.pack.add({ "https://github.com/folke/todo-comments.nvim" }, { confirm = false })
+require("todo-comments").setup({
+  signs = true,
+})
+vim.keymap.set("n", "<leader>st", "<cmd>TodoTelescope<CR>", { desc = "Search Todos" })
 
 -- INFO: Build script execution
 vim.keymap.set("n", "<leader>a", function()
