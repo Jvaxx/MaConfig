@@ -1,5 +1,6 @@
 ---@diagnostic disable: missing-fields
 
+-- INFO: Options générales
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 vim.opt.termguicolors = true
@@ -10,18 +11,16 @@ vim.opt.clipboard = "unnamedplus"
 vim.opt.undofile = true
 vim.opt.signcolumn = "yes"
 vim.opt.list = true
-vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣", }
+vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 vim.opt.inccommand = "nosplit"
 vim.opt.cursorline = true
 vim.opt.colorcolumn = "90"
-
--- set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
-
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.opt.breakindent = true
 vim.opt.wrap = false
 
--- formatting
+-- INFO: Formattage par défaut
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
@@ -36,24 +35,25 @@ vim.diagnostic.config({
             [vim.diagnostic.severity.HINT] = " ",
         },
     },
-    virtual_text = true, -- show inline diagnostics
+    virtual_text = true, -- inline diag
 })
 
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 vim.cmd.colorscheme("catppuccin")
 
--- INFO: formatting and syntax highlighting
+-- INFO: Formattager et highlighting
 vim.pack.add({ "https://github.com/nvim-treesitter/nvim-treesitter" }, { confirm = false })
 local required_parsers = { "c", "cpp", "lua", "vim", "vimdoc", "query", "rust", "go", "python" }
 local config = require("nvim-treesitter.config")
-local missing_parsers = vim.iter(required_parsers):filter(function(parser)
-    return not vim.tbl_contains(config.get_installed(), parser)
-end):totable()
+local missing_parsers = vim.iter(required_parsers)
+    :filter(function(parser)
+        return not vim.tbl_contains(config.get_installed(), parser)
+    end)
+    :totable()
 if #missing_parsers > 0 then
     require("nvim-treesitter").install(missing_parsers)
 end
 
--- INFO: completion engine
+-- INFO: Autocomplétion
 vim.pack.add({ "https://github.com/saghen/blink.cmp" }, { confirm = false })
 require("blink.cmp").setup({
     completion = {
@@ -62,15 +62,15 @@ require("blink.cmp").setup({
         },
     },
     keymap = {
-        ['<C-p>'] = { 'select_prev', 'fallback_to_mappings' },
-        ['<C-n>'] = { 'select_next', 'fallback_to_mappings' },
-        ['<C-y>'] = { 'select_and_accept', 'fallback' },
-        ['<C-e>'] = { 'cancel', 'fallback' },
-        ['<C-space>'] = { 'show', 'show_documentation', 'hide_documentation' },
-        ['<Tab>'] = { 'snippet_forward', 'fallback' },
-        ['<S-Tab>'] = { 'snippet_backward', 'fallback' },
-        ['<C-b>'] = { 'scroll_documentation_up', 'fallback' },
-        ['<C-f>'] = { 'scroll_documentation_down', 'fallback' },
+        ["<C-p>"] = { "select_prev", "fallback_to_mappings" },
+        ["<C-n>"] = { "select_next", "fallback_to_mappings" },
+        ["<C-y>"] = { "select_and_accept", "fallback" },
+        ["<C-e>"] = { "cancel", "fallback" },
+        ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<Tab>"] = { "snippet_forward", "fallback" },
+        ["<S-Tab>"] = { "snippet_backward", "fallback" },
+        ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+        ["<C-f>"] = { "scroll_documentation_down", "fallback" },
         -- ['<leader>k'] = { 'show_signature', 'hide_signature', 'fallback' },
     },
     fuzzy = {
@@ -78,11 +78,11 @@ require("blink.cmp").setup({
     },
 })
 
--- INFO: lsp server installation and configuration
+-- INFO: LSP Servers
 local lsp_servers = {
     lua_ls = {
         -- [https://luals.github.io/wiki/settings/](https://luals.github.io/wiki/settings/) | `:h nvim_get_runtime_file`
-        Lua = { workspace = { library = vim.api.nvim_get_runtime_file("lua", true) }, },
+        Lua = { workspace = { library = vim.api.nvim_get_runtime_file("lua", true) } },
     },
     clangd = {},
     rust_analyzer = {},
@@ -93,8 +93,8 @@ local lsp_servers = {
                 typeCheckingMode = "basic", -- ou "strict" pour typer fortement
                 autoSearchPaths = true,
                 useLibraryCodeForTypes = true,
-            }
-        }
+            },
+        },
     },
     ruff = {}, -- Formattage
 }
@@ -120,15 +120,14 @@ require("bufferline").setup({
         -- separator_style = "slant", -- style biseauté, très esthétique (optionnel)
         diagnostics = "nvim_lsp", -- affiche les erreurs LSP directement dans l'onglet
         always_show_bufferline = true,
-    }
+    },
 })
 
-
 vim.pack.add({
-    "https://github.com/neovim/nvim-lspconfig",                    -- default configs for lsps
-    "https://github.com/mason-org/mason.nvim",                     -- package manager
-    "https://github.com/mason-org/mason-lspconfig.nvim",           -- lspconfig bridge
-    "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim" -- auto installer
+    "https://github.com/neovim/nvim-lspconfig",                     -- default configs for lsps
+    "https://github.com/mason-org/mason.nvim",                      -- package manager
+    "https://github.com/mason-org/mason-lspconfig.nvim",            -- lspconfig bridge
+    "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim", -- auto installer
 }, { confirm = false })
 
 require("mason").setup()
@@ -146,13 +145,17 @@ for server, config_lsp in pairs(lsp_servers) do
 
         -- only create the keymaps if the server attaches successfully
         on_attach = function(client, bufnr)
-            vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Definition", })
-            vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = bufnr, desc = "Declaration", })
-            vim.keymap.set("n", "<leader>cf", vim.lsp.buf.format, { buffer = bufnr, desc = "Code Format", })
+            vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Definition" })
+            vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = bufnr, desc = "Declaration" })
+            vim.keymap.set("n", "<leader>cf", vim.lsp.buf.format, { buffer = bufnr, desc = "Code Format" })
             vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, { buffer = bufnr, desc = "Code Action" })
             vim.keymap.set("n", "<leader>cr", vim.lsp.buf.rename, { buffer = bufnr, desc = "Code Rename" })
-            vim.keymap.set("n", "<leader>cd", vim.diagnostic.open_float,
-                { buffer = bufnr, desc = "Code Diagnostic float" })
+            vim.keymap.set(
+                "n",
+                "<leader>cd",
+                vim.diagnostic.open_float,
+                { buffer = bufnr, desc = "Code Diagnostic float" }
+            )
 
             -- Activer le format-on-save si le serveur le supporte
             if client and client.server_capabilities.documentFormattingProvider then
@@ -170,13 +173,13 @@ for server, config_lsp in pairs(lsp_servers) do
     })
 end
 
--- INFO: fuzzy finder
+-- INFO: Telescope
 vim.pack.add({
     "https://github.com/nvim-lua/plenary.nvim",       -- library dependency
     "https://github.com/nvim-tree/nvim-web-devicons", -- icons (nerd font)
     {
         src = "https://github.com/nvim-telescope/telescope.nvim",
-        version = "master"
+        version = "master",
     },
 }, { confirm = false })
 
@@ -184,20 +187,26 @@ require("telescope").setup({})
 
 local pickers = require("telescope.builtin")
 
-vim.keymap.set("n", "<leader>sp", pickers.builtin, { desc = "Search Builtin Pickers", })
-vim.keymap.set("n", "<leader>sb", pickers.buffers, { desc = "Search Buffers", })
-vim.keymap.set("n", "<leader>sf", pickers.find_files, { desc = "Search Files", })
-vim.keymap.set("n", "<leader>sw", pickers.grep_string, { desc = "Search Current Word", })
-vim.keymap.set("n", "<leader>sg", pickers.live_grep, { desc = "Search by Grep", })
-vim.keymap.set("n", "<leader>sr", pickers.resume, { desc = "Search Resume", })
+vim.keymap.set("n", "<leader>sp", pickers.builtin, { desc = "Search Builtin Pickers" })
+vim.keymap.set("n", "<leader>sb", pickers.buffers, { desc = "Search Buffers" })
+vim.keymap.set("n", "<leader>sf", pickers.find_files, { desc = "Search Files" })
+vim.keymap.set("n", "<leader>sw", pickers.grep_string, { desc = "Search Current Word" })
+vim.keymap.set("n", "<leader>sg", pickers.live_grep, { desc = "Search by Grep" })
+vim.keymap.set("n", "<leader>sr", pickers.resume, { desc = "Search Resume" })
 vim.keymap.set("n", "gr", pickers.lsp_references, { desc = "References" })
 vim.keymap.set("n", "<leader>cs", pickers.lsp_document_symbols, { desc = "Code Symbols (Doc)" })
 vim.keymap.set("n", "<leader>cS", pickers.lsp_workspace_symbols, { desc = "Code Symbols (Proj)" })
-vim.keymap.set("n", "<leader>sh", pickers.help_tags, { desc = "Search Help", })
-vim.keymap.set("n", "<leader>sm", pickers.man_pages, { desc = "Search Manuals", })
+vim.keymap.set("n", "<leader>sh", pickers.help_tags, { desc = "Search Help" })
+vim.keymap.set("n", "<leader>sm", pickers.man_pages, { desc = "Search Manuals" })
 
-vim.keymap.set("n", "<leader>e", "<cmd>Lexplore<CR>", { desc = "Explorer" })
-vim.g.netrw_winsize = 25
+vim.keymap.set("n", "<leader>e", function()
+    vim.cmd("Lexplore")
+    -- INFO: Répartit équitablement l'espace entre toutes les fenêtres
+    -- non verrouillées (donc toutes sauf Netrw)
+    vim.cmd("wincmd =")
+end, { desc = "Explorer" })
+vim.g.netrw_winsize = -35
+vim.g.netrw_banner = 0
 
 -- Raccourcis pour naviguer entre les fenêtres plus rapidement (style LazyVim)
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Aller à la fenêtre de gauche" })
@@ -258,6 +267,7 @@ vim.api.nvim_create_autocmd("FileType", {
     callback = function()
         -- Empêche Netrw de créer des buffers fantômes persistants
         vim.bo.bufhidden = "wipe"
+        vim.wo.winfixwidth = true
     end,
     desc = "Wipe netrw buffers when hidden to avoid [No Name] pollution",
 })
@@ -283,7 +293,9 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.keymap.set("n", "%", function()
             -- Demande le nom du fichier à l'utilisateur
             local filename = vim.fn.input("Nouveau fichier : ")
-            if filename == "" then return end
+            if filename == "" then
+                return
+            end
 
             -- Récupère le dossier actuellement affiché par Netrw
             local netrw_dir = vim.b.netrw_curdir or vim.fn.expand("%:p:h")
@@ -312,10 +324,21 @@ require("which-key").setup({
         border = "rounded",
         padding = { 1, 2 },
     },
+    triggers = {
+        { "<auto>", mode = "nxso" },
+        -- { "m",      mode = { "n", "v" } },
+    },
     spec = {
-        { "<leader>s", group = "Search", icon = { icon = "", color = "green", }, },
-        { "<leader>c", group = "Code", icon = { icon = "", color = "green", }, },
-    }
+        { "<leader>s", group = "Search", icon = { icon = "", color = "green" } },
+        { "<leader>c", group = "Code", icon = { icon = "", color = "green" } },
+        -- INFO: Raccourcis pour les marques. Affichage sur which-key non fonctionnel.
+        -- { "m", group = "Marks", icon = { icon = "󰃁", color = "blue" } },
+        -- { "m,", desc = "Mark prev" },
+        -- { "m;", desc = "Mark next" },
+        -- { "dm", desc = "Del m + letter" },
+        -- { "dm-", desc = "Del m curr line" },
+        -- { "dm<space>", desc = "Del m buff" },
+    },
 })
 
 -- INFO: Barre des buffers (onglets style LazyVim)
@@ -367,8 +390,8 @@ vim.keymap.set("n", "<leader>gg", function()
         height = height,
         col = col,
         row = row,
-        style = "minimal", -- Désactive les numéros de ligne et autres éléments de l'UI
-        border = "rounded" -- Bordure arrondie (identique à votre which-key)
+        style = "minimal",  -- Désactive les numéros de ligne et autres éléments de l'UI
+        border = "rounded", -- Bordure arrondie (identique à votre which-key)
     }
     vim.api.nvim_open_win(buf, true, win_opts)
     vim.fn.termopen("lazygit", {
@@ -377,10 +400,18 @@ vim.keymap.set("n", "<leader>gg", function()
             if vim.api.nvim_buf_is_valid(buf) then
                 vim.api.nvim_buf_delete(buf, { force = true }) -- Purgé de force en tâche de fond
             end
-        end
+        end,
     })
     vim.cmd("startinsert")
 end, { desc = "Lazygit" })
+
+-- INFO: Affichage visuel des marques dans la marge
+vim.pack.add({ "https://github.com/chentoast/marks.nvim" }, { confirm = false })
+require("marks").setup({
+    signs = true,
+    default_mappings = true,
+    excluded_filetypes = { "TelescopePrompt", "lazy", "mason", "netrw" },
+})
 
 -- uncomment to enable automatic plugin updates
 -- vim.pack.update()
