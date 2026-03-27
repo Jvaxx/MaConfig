@@ -331,6 +331,7 @@ require("which-key").setup({
     spec = {
         { "<leader>s", group = "Search", icon = { icon = "", color = "green" } },
         { "<leader>c", group = "Code", icon = { icon = "", color = "green" } },
+        { "s", group = "Surround", icon = { icon = "󰅩", color = "yellow" } },
         -- INFO: Raccourcis pour les marques. Affichage sur which-key non fonctionnel.
         -- { "m", group = "Marks", icon = { icon = "󰃁", color = "blue" } },
         -- { "m,", desc = "Mark prev" },
@@ -411,6 +412,24 @@ require("marks").setup({
     signs = true,
     default_mappings = true,
     excluded_filetypes = { "TelescopePrompt", "lazy", "mason", "netrw" },
+})
+
+-- INFO: Ajout, suppression et modification des paires (parenthèses, guillemets...)
+vim.pack.add({ "https://github.com/nvim-mini/mini.surround" }, { confirm = false })
+require("mini.surround").setup({
+    -- Les raccourcis par défaut (similaires au standard historique vim-surround) :
+    -- sa : Add (Ajouter)
+    -- sd : Delete (Supprimer)
+    -- sr : Replace (Remplacer)
+})
+
+-- INFO: Flash visuel sur le texte yanké
+vim.api.nvim_create_autocmd("TextYankPost", {
+    desc = "Flash le texte yanké",
+    group = vim.api.nvim_create_augroup("highlight-yank", { clear = true }),
+    callback = function()
+        vim.hl.on_yank({ higroup = "Visual", timeout = 150 })
+    end,
 })
 
 -- uncomment to enable automatic plugin updates
