@@ -113,6 +113,19 @@ require("nvim-autopairs").setup({
 })
 
 -- INFO: Barre des buffers (onglets style LazyVim)
+local function harpoon_index(path)
+    local ok, harpoon = pcall(require, "harpoon")
+    if not ok then
+        return nil
+    end
+    local rel = vim.fn.fnamemodify(path, ":.")
+    for i, item in ipairs(harpoon:list().items) do
+        if item.value == rel then
+            return i
+        end
+    end
+    return nil
+end
 vim.pack.add({ "https://github.com/akinsho/bufferline.nvim" }, { confirm = false })
 require("bufferline").setup({
     options = {
@@ -120,6 +133,39 @@ require("bufferline").setup({
         -- separator_style = "slant", -- style biseauté, très esthétique (optionnel)
         diagnostics = "nvim_lsp", -- affiche les erreurs LSP directement dans l'onglet
         always_show_bufferline = true,
+
+        -- Affiche l'index harpoon si marqué, rien sinon
+        numbers = function(opts)
+            local ok, harpoon = pcall(require, "harpoon")
+            if not ok then
+                return ""
+            end
+
+            local list = harpoon:list()
+            -- buf_name est absolu, item.value est relatif au cwd
+            local buf_name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(opts.id), ":.")
+
+            for i, item in ipairs(list.items) do
+                if item.value == buf_name then
+                    return tostring(i)
+                end
+            end
+            return ""
+        end,
+        sort_by = function(a, b)
+            local ia = harpoon_index(a.path)
+            local ib = harpoon_index(b.path)
+            if ia and ib then
+                return ia < ib
+            end -- deux buffers harpoon : ordre harpoon
+            if ia then
+                return true
+            end -- a est harpoon, b non → a devant
+            if ib then
+                return false
+            end                -- b est harpoon, a non → b devant
+            return a.id < b.id -- aucun des deux : ordre naturel
+        end,
     },
 })
 
@@ -187,17 +233,17 @@ require("telescope").setup({})
 
 local pickers = require("telescope.builtin")
 
-vim.keymap.set("n", "<leader>sp", pickers.builtin, { desc = "Search Builtin Pickers" })
-vim.keymap.set("n", "<leader>sb", pickers.buffers, { desc = "Search Buffers" })
-vim.keymap.set("n", "<leader>sf", pickers.find_files, { desc = "Search Files" })
-vim.keymap.set("n", "<leader>sw", pickers.grep_string, { desc = "Search Current Word" })
-vim.keymap.set("n", "<leader>sg", pickers.live_grep, { desc = "Search by Grep" })
-vim.keymap.set("n", "<leader>sr", pickers.resume, { desc = "Search Resume" })
+vim.keymap.set("n", "<leader>fp", pickers.builtin, { desc = "Find Builtin Pickers" })
+vim.keymap.set("n", "<leader>fb", pickers.buffers, { desc = "Find Buffers" })
+vim.keymap.set("n", "<leader>ff", pickers.find_files, { desc = "Find Files" })
+vim.keymap.set("n", "<leader>fw", pickers.grep_string, { desc = "Find Current Word" })
+vim.keymap.set("n", "<leader>fg", pickers.live_grep, { desc = "Find by Grep" })
+vim.keymap.set("n", "<leader>fr", pickers.resume, { desc = "Find Resume" })
 vim.keymap.set("n", "gr", pickers.lsp_references, { desc = "References" })
 vim.keymap.set("n", "<leader>cs", pickers.lsp_document_symbols, { desc = "Code Symbols (Doc)" })
 vim.keymap.set("n", "<leader>cS", pickers.lsp_workspace_symbols, { desc = "Code Symbols (Proj)" })
-vim.keymap.set("n", "<leader>sh", pickers.help_tags, { desc = "Search Help" })
-vim.keymap.set("n", "<leader>sm", pickers.man_pages, { desc = "Search Manuals" })
+vim.keymap.set("n", "<leader>fh", pickers.help_tags, { desc = "Find Help" })
+vim.keymap.set("n", "<leader>fm", pickers.man_pages, { desc = "Find Manuals" })
 
 vim.keymap.set("n", "<leader>e", function()
     vim.cmd("Lexplore")
@@ -329,12 +375,17 @@ require("which-key").setup({
         -- { "m",      mode = { "n", "v" } },
     },
     spec = {
-        { "<leader>s", group = "Search", icon = { icon = "", color = "green" } },
-        { "<leader>c", group = "Code", icon = { icon = "", color = "green" } },
-        { "s", group = "Surround", icon = { icon = "󰅩", color = "yellow" } },
+        { "<leader>f", group = "Find", icon = { icon = "󰍉", color = "green" } },
+        { "<leader>c", group = "Code", icon = { icon = "󰅩", color = "orange" } },
+        { "<leader>b", group = "Buffer", icon = { icon = "󰓩", color = "blue" } },
+        { "<leader>h", group = "Harpoon", icon = { icon = "󱡀", color = "yellow" } },
+        { "<leader>g", group = "Git", icon = { icon = "󰊢", color = "red" } },
+        { "<leader>a", desc = "Build", icon = { icon = "󰑓", color = "blue" } },
+        { "s", group = "Surround", icon = { icon = "󰅪", color = "purple" } },
+        { "<leader>e", desc = "Explorer", icon = { icon = "󰙅", color = "blue" } },
         -- INFO: Raccourcis pour les marques. Affichage sur which-key non fonctionnel.
         -- { "m", group = "Marks", icon = { icon = "󰃁", color = "blue" } },
-        -- { "m,", desc = "Mark prev" },
+        -- { "m,", desc = "Mark prev" }
         -- { "m;", desc = "Mark next" },
         -- { "dm", desc = "Del m + letter" },
         -- { "dm-", desc = "Del m curr line" },
@@ -350,7 +401,7 @@ vim.pack.add({ "https://github.com/folke/todo-comments.nvim" }, { confirm = fals
 require("todo-comments").setup({
     signs = true,
 })
-vim.keymap.set("n", "<leader>st", "<cmd>TodoTelescope<CR>", { desc = "Search Todos" })
+vim.keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<CR>", { desc = "Find Todos" })
 
 -- INFO: Build script execution
 vim.keymap.set("n", "<leader>a", function()
@@ -442,6 +493,38 @@ vim.pack.add({ "https://github.com/mg979/vim-visual-multi" }, { confirm = false 
 
 -- INFO: VimBeGood
 vim.pack.add({ "https://github.com/ThePrimeagen/vim-be-good" }, { confirm = false })
+
+-- INFO: Harpoon
+vim.pack.add({
+    { src = "https://github.com/ThePrimeagen/harpoon", version = "harpoon2" },
+}, { confirm = false })
+local harpoon = require("harpoon")
+harpoon:setup()
+
+-- Gestion de la liste
+vim.keymap.set("n", "<leader>ha", function()
+    harpoon:list():add()
+    vim.cmd("redrawtabline")
+end, { desc = "Harpoon Add" })
+vim.keymap.set("n", "<leader>hd", function()
+    harpoon:list():remove()
+    vim.cmd("redrawtabline")
+end, { desc = "Harpoon Delete" })
+vim.keymap.set("n", "<leader>hh", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, { desc = "Harpoon Menu" })
+
+-- Sauts directs AZERTY (&éè' = 1234 sans Shift)
+vim.keymap.set("n", "<leader>&", function()
+    harpoon:list():select(1)
+end, { desc = "Harpoon 1" })
+vim.keymap.set("n", "<leader>é", function()
+    harpoon:list():select(2)
+end, { desc = "Harpoon 2" })
+vim.keymap.set("n", '<leader>"', function()
+    harpoon:list():select(3)
+end, { desc = "Harpoon 3" })
+vim.keymap.set("n", "<leader>'", function()
+    harpoon:list():select(4)
+end, { desc = "Harpoon 4" })
 
 -- uncomment to enable automatic plugin updates
 -- vim.pack.update()
