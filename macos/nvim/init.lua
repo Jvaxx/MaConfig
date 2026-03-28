@@ -432,5 +432,16 @@ vim.api.nvim_create_autocmd("TextYankPost", {
     end,
 })
 
+-- INFO: Multicurseurs
+-- Ctrl+N — sélectionne le mot sous le curseur et ajoute un curseur au suivant
+-- Ctrl+↓ / Ctrl+↑ — ajoute un curseur verticalement ligne par ligne
+-- n / N — occurrence suivante/précédente
+-- q — skipe l'occurrence courante
+-- i, a, I, A — entre en mode insertion sur tous les curseurs simultanément (avec feedback live)
+vim.pack.add({ "https://github.com/mg979/vim-visual-multi" }, { confirm = false })
+
+-- INFO: VimBeGood
+vim.pack.add({ "https://github.com/ThePrimeagen/vim-be-good" }, { confirm = false })
+
 -- uncomment to enable automatic plugin updates
 -- vim.pack.update()
