@@ -17,14 +17,23 @@ vim.opt.cursorline = true
 vim.opt.colorcolumn = "90"
 vim.opt.hlsearch = true
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
-vim.opt.breakindent = true
-vim.opt.wrap = false
+vim.opt.breakindent    = true
+vim.opt.wrap           = false
+
+-- INFO: Folding sémantique via Treesitter
+vim.opt.foldmethod     = "expr"
+vim.opt.foldexpr       = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldlevelstart = 99 -- tout ouvert à l'ouverture du fichier
+vim.opt.foldlevel      = 99
+vim.opt.foldenable     = true
 
 -- INFO: Formattage par défaut
-vim.opt.tabstop = 4
-vim.opt.shiftwidth = 4
-vim.opt.expandtab = true
-vim.opt.textwidth = 90
+vim.opt.tabstop        = 4
+vim.opt.shiftwidth     = 4
+vim.opt.expandtab      = true
+vim.opt.textwidth      = 90
+
+vim.g.netrw_liststyle  = 3
 
 vim.diagnostic.config({
     signs = {
@@ -239,7 +248,8 @@ vim.keymap.set("n", "<leader>ff", pickers.find_files, { desc = "Find Files" })
 vim.keymap.set("n", "<leader>fw", pickers.grep_string, { desc = "Find Current Word" })
 vim.keymap.set("n", "<leader>fg", pickers.live_grep, { desc = "Find by Grep" })
 vim.keymap.set("n", "<leader>fr", pickers.resume, { desc = "Find Resume" })
-vim.keymap.set("n", "gr", pickers.lsp_references, { desc = "References" })
+-- vim.keymap.set("n", "gr", pickers.lsp_references, { desc = "References" })
+vim.keymap.set("n", "grr", require("telescope.builtin").lsp_references, { desc = "References" })
 vim.keymap.set("n", "<leader>cs", pickers.lsp_document_symbols, { desc = "Code Symbols (Doc)" })
 vim.keymap.set("n", "<leader>cS", pickers.lsp_workspace_symbols, { desc = "Code Symbols (Proj)" })
 vim.keymap.set("n", "<leader>fh", pickers.help_tags, { desc = "Find Help" })
@@ -251,7 +261,7 @@ vim.keymap.set("n", "<leader>e", function()
     -- non verrouillées (donc toutes sauf Netrw)
     vim.cmd("wincmd =")
 end, { desc = "Explorer" })
-vim.g.netrw_winsize = -35
+vim.g.netrw_winsize = -40
 vim.g.netrw_banner = 0
 
 -- Raccourcis pour naviguer entre les fenêtres plus rapidement (style LazyVim)
@@ -318,20 +328,6 @@ vim.api.nvim_create_autocmd("FileType", {
     desc = "Wipe netrw buffers when hidden to avoid [No Name] pollution",
 })
 
--- INFO: Ouvrir Netrw en panneau latéral au lancement sur un dossier
-vim.api.nvim_create_autocmd("VimEnter", {
-    callback = function()
-        local current_file = vim.fn.expand("%:p")
-        if vim.fn.isdirectory(current_file) == 1 then
-            vim.cmd("enew")
-            vim.cmd("bwipeout #")
-            vim.cmd("cd " .. vim.fn.fnameescape(current_file))
-            vim.cmd("Lexplore")
-        end
-    end,
-    desc = "Ouvre Netrw comme panneau latéral si nvim est lancé dans un dossier",
-})
-
 -- Corriger l'ouverture des nouveaux fichiers (%) dans la barre latérale Netrw
 vim.api.nvim_create_autocmd("FileType", {
     pattern = "netrw",
@@ -358,6 +354,16 @@ vim.api.nvim_create_autocmd("FileType", {
             vim.cmd("edit " .. netrw_dir .. "/" .. filename)
         end, { buffer = opts.buf, desc = "Créer un fichier dans la fenêtre principale" })
     end,
+})
+
+-- INFO: Activer les numéros de lignes relatifs dans Netrw
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = "netrw",
+    callback = function()
+        vim.opt_local.number = true
+        vim.opt_local.relativenumber = true
+    end,
+    desc = "Affiche les numéros de lignes relatifs dans l'explorateur Netrw",
 })
 
 vim.pack.add({ "https://github.com/folke/which-key.nvim" }, { confirm = false })
@@ -525,6 +531,97 @@ end, { desc = "Harpoon 3" })
 vim.keymap.set("n", "<leader>'", function()
     harpoon:list():select(4)
 end, { desc = "Harpoon 4" })
+
+
+-- INFO: Gestion intelligente de l'ouverture d'un projet (nvim .)
+vim.api.nvim_create_autocmd("VimEnter", {
+    callback = function()
+        local current_file = vim.fn.expand("%:p")
+
+        -- Si on n'a pas lancé Neovim sur un dossier, on ne fait rien
+        if vim.fn.isdirectory(current_file) == 0 then return end
+
+        local has_harpoon_files = false
+        local first_harpoon_file = nil
+
+        -- 1. Tentative de chargement des fichiers Harpoon
+        local ok, harpoon = pcall(require, "harpoon")
+        if ok then
+            local list = harpoon:list()
+            for _, item in ipairs(list.items) do
+                if item and item.value then
+                    if not has_harpoon_files then
+                        first_harpoon_file = vim.fn.fnameescape(item.value)
+                        has_harpoon_files = true
+                    end
+                    vim.cmd("badd " .. vim.fn.fnameescape(item.value))
+                end
+            end
+        end
+
+        -- 2. Nettoyage du buffer vide créé par l'ouverture du dossier
+        vim.cmd("enew")
+        vim.cmd("bwipeout #")
+        vim.cmd("cd " .. vim.fn.fnameescape(current_file))
+
+        -- 3. Choix du comportement : Harpoon ou Netrw
+        if has_harpoon_files then
+            vim.cmd("edit " .. first_harpoon_file)
+            vim.cmd("doautocmd BufRead")
+            vim.cmd("doautocmd FileType")
+        else
+            vim.cmd("Lexplore")
+        end
+    end,
+    desc = "Charge Harpoon ou Lexplore selon le contexte du projet",
+})
+
+-- INFO: Bascule entre fichier source et en-tête (C/C++)
+local function switch_source_header()
+    local current_ext = vim.fn.expand("%:e")
+    local base_name = vim.fn.expand("%:t:r")
+    local is_cpp = current_ext == "cpp" or current_ext == "c"
+    local is_h = current_ext == "h" or current_ext == "hpp"
+
+    if not (is_cpp or is_h) then
+        vim.notify("Ce n'est pas un fichier source/header C ou C++.", vim.log.levels.WARN)
+        return
+    end
+
+    local target_exts = is_cpp and { "h", "hpp" } or { "cpp", "c" }
+
+    -- Méthode 2: Fonction de repli (Recherche manuelle récursive)
+    local function fallback_search()
+        for _, ext in ipairs(target_exts) do
+            local target_name = base_name .. "." .. ext
+            local found = vim.fn.globpath(vim.fn.getcwd(), "**/" .. target_name, false, true)
+            if #found > 0 then
+                vim.cmd("edit " .. found[1])
+                if #found > 1 then
+                    vim.notify("Plusieurs resultate, ouverture du 1er." .. found[1], vim.log.levels.INFO)
+                end
+                return
+            end
+        end
+        vim.notify("Fichier cible introuvable.", vim.log.levels.WARN)
+    end
+
+    -- Méthode 1: Tentative via clangd (Plus précis si le projet est configuré)
+    local clients = vim.lsp.get_clients({ bufnr = 0, name = "clangd" })
+    if #clients > 0 then
+        clients[1]:request("textDocument/switchSourceHeader", { uri = vim.uri_from_bufnr(0) }, function(err, result)
+            if result then
+                vim.schedule(function() vim.cmd("edit " .. vim.uri_to_fname(result)) end)
+            else
+                vim.schedule(fallback_search)
+            end
+        end, 0)
+    else
+        fallback_search()
+    end
+end
+
+vim.keymap.set("n", "<leader>à", switch_source_header, { desc = "Src <-> Header" })
 
 -- uncomment to enable automatic plugin updates
 -- vim.pack.update()
