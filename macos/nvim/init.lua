@@ -47,6 +47,7 @@ vim.diagnostic.config({
     virtual_text = true, -- inline diag
 })
 
+vim.pack.add({ "https://github.com/catppuccin/nvim" }, { confirm = false })
 vim.cmd.colorscheme("catppuccin")
 
 -- INFO: Formattager et highlighting
@@ -261,8 +262,9 @@ vim.keymap.set("n", "<leader>e", function()
     -- non verrouillées (donc toutes sauf Netrw)
     vim.cmd("wincmd =")
 end, { desc = "Explorer" })
-vim.g.netrw_winsize = -40
+vim.g.netrw_winsize = -30
 vim.g.netrw_banner = 0
+vim.g.netrw_browse_split = 4 -- ouvrir les fichiers dans la fenêtre précédente (cible)
 
 -- Raccourcis pour naviguer entre les fenêtres plus rapidement (style LazyVim)
 vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Aller à la fenêtre de gauche" })
@@ -289,7 +291,7 @@ vim.keymap.set("n", "<leader>bd", function()
     local modified = vim.bo[bufnr].modified
 
     if modified then
-        vim.notify("Le bufferpas sauvegardé !", vim.log.levels.WARN)
+        vim.notify("Le buffer n'est pas sauvegardé !", vim.log.levels.WARN)
         return
     end
 
@@ -399,9 +401,6 @@ require("which-key").setup({
     },
 })
 
--- INFO: Barre des buffers (onglets style LazyVim)
-vim.pack.add({ "https://github.com/akinsho/bufferline.nvim" }, { confirm = false })
-
 -- INFO: Mise en évidence des tags dans les commentaires
 vim.pack.add({ "https://github.com/folke/todo-comments.nvim" }, { confirm = false })
 require("todo-comments").setup({
@@ -452,7 +451,8 @@ vim.keymap.set("n", "<leader>gg", function()
         border = "rounded", -- Bordure arrondie (identique à votre which-key)
     }
     vim.api.nvim_open_win(buf, true, win_opts)
-    vim.fn.termopen("lazygit", {
+    vim.fn.jobstart("lazygit", {
+        term = true,
         on_exit = function()
             -- Callback exécuté quand on quitte lazygit (avec 'q')
             if vim.api.nvim_buf_is_valid(buf) then
