@@ -3,6 +3,7 @@
 # Ajouté ici = sauvegardé par sync.sh et restauré par restore.sh.
 
 # --- Hyprland (modifiés vs défauts Omarchy) ---
+.config/hypr/hyprland.lua
 .config/hypr/bindings.lua
 .config/hypr/input.lua
 .config/hypr/looknfeel.lua
@@ -26,6 +27,9 @@
 .config/omarchy/plugins/jvz.menu
 .config/omarchy/extensions/omarchy-menu.jsonc
 .config/omarchy/extensions/menu.sh
+
+# --- Layouts par workspace (écrits par SUPER+ALT+L / omarchy-hyprland-workspace-layout-toggle) ---
+.local/state/omarchy/workspace-layouts
 
 # --- Divers Omarchy perso ---
 .config/omarchy/defaults/agent
