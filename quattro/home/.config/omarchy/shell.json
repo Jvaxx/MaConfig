@@ -29,8 +29,7 @@
           "id": "omarchy.workspaces"
         },
         {
-          "id": "omarchy.active-window",
-          "maxWidth": 400
+          "id": "omarchy.active-window"
         }
       ],
       "right": [
