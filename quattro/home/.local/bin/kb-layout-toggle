@@ -1,0 +1,37 @@
+#!/bin/bash
+# Cycle the Hyprland xkb layout on every keyboard and show which one landed.
+#
+# Not named omarchy-* on purpose: the `omarchy` CLI dispatches `omarchy a b c`
+# to an `omarchy-a-b-c` binary on PATH, so that prefix would squat a subcommand.
+
+set -euo pipefail
+
+hyprctl switchxkblayout all next >/dev/null
+
+# Read the layout back instead of tracking it ourselves: hypridle, omarchy-system-lock
+# (`hyprctl switchxkblayout all 0`) and hotplugged keyboards all move this behind our back.
+# `hyprctl -j devices` emits invalid JSON on this version, so parse the text form.
+# Field order inside a keyboard block is: rules, active layout index, active keymap,
+# capsLock, numLock, main -- so the keymap is always already captured by the time
+# `main: yes` is seen.
+layout="$(hyprctl devices | awk '
+    /active keymap:/ { sub(/^[[:space:]]*active keymap:[[:space:]]*/, ""); km = $0 }
+    /main: yes/      { print km; exit }
+')"
+
+# Fall back to the first keyboard if no device is flagged main.
+if [[ -z $layout ]]; then
+    layout="$(hyprctl devices | awk '
+        /active keymap:/ { sub(/^[[:space:]]*active keymap:[[:space:]]*/, ""); print; exit }
+    ')"
+fi
+
+# x-canonical-private-synchronous makes mako replace the previous notification
+# rather than stacking one per toggle.
+notify-send \
+    --app-name="Keyboard" \
+    --icon=input-keyboard \
+    --expire-time=1500 \
+    --hint=string:x-canonical-private-synchronous:kb-layout \
+    "Keyboard layout" \
+    "${layout:-unknown}"

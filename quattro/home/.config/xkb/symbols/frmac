@@ -1,0 +1,27 @@
+// French (Macintosh) adapted to a physical QWERTY/ANSI board with no F-row.
+//
+// Two things this board lacks, and what happens to the keys that live there:
+//
+//   1. ANSI has no <LSGT> key (the one left of Left Shift), which is where
+//      fr(mac) puts  <  >  <=  >= . They are moved onto levels 3/4 of <AB01>
+//      (physical Z = AZERTY W), replacing U2039/U203A (single guillemets),
+//      which are not worth a key.
+//
+//   2. With no F-row, the top-left key is Escape and the board has no <TLDE>
+//      at all, so fr(mac)'s  @ # · ÿ  key has no physical home. Nothing is
+//      remapped for it: <ESC> stays Escape. fr(mac) already carries @ and #
+//      on levels 3/4 of <BKSL>, so they remain typeable as AltGr+\ and
+//      AltGr+Shift+\ . Only · and ÿ are genuinely lost.
+//
+// Right Alt is already ISO_Level3_Shift: fr(mac) includes level3(ralt_switch).
+
+default partial alphanumeric_keys
+xkb_symbols "ansi" {
+
+    include "fr(mac)"
+
+    name[Group1] = "French (Macintosh, ANSI)";
+
+    // AltGr+W / AltGr+Shift+W stand in for the missing <LSGT>: < >
+    replace key <AB01> { [            w,           W,           less,    greater ] };
+};

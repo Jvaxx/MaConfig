@@ -1,0 +1,22 @@
+// Plain US QWERTY for the same F-rowless ANSI board.
+//
+// Only deviation from stock us(basic): the board has no <TLDE>. The top-left
+// key is Escape and stays Escape, which leaves ` and ~ homeless. They move to
+// levels 3/4 of <BKSL> -- AltGr+\ and AltGr+Shift+\ -- the same physical key
+// where frmac keeps its @ and #, so "the key this board is missing lives on
+// AltGr+backslash" holds in both layouts.
+//
+// us(basic) has no level3 modifier of its own, so ralt_switch is pulled in
+// explicitly. frmac gets the same one from fr(mac), so AltGr means the same
+// thing whichever layout is active.
+
+default partial alphanumeric_keys
+xkb_symbols "ansi" {
+
+    include "us(basic)"
+    include "level3(ralt_switch)"
+
+    name[Group1] = "English (US, ANSI)";
+
+    replace key <BKSL> { [ backslash, bar, grave, asciitilde ] };
+};

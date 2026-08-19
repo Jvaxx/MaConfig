@@ -1,0 +1,78 @@
+{
+  "bar": {
+    "centerAnchor": "omarchy.clock",
+    "layout": {
+      "center": [
+        {
+          "id": "omarchy.indicators"
+        },
+        {
+          "id": "omarchy.clock",
+          "format": "dd dddd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm",
+          "birthYear": 2002,
+          "lifeExpectancy": 85
+        },
+        {
+          "id": "omarchy.keyboard-layout"
+        },
+        {
+          "id": "omarchy.system-update"
+        }
+      ],
+      "left": [
+        {
+          "id": "jvz.menu"
+        },
+        {
+          "id": "omarchy.workspaces"
+        },
+        {
+          "id": "omarchy.active-window",
+          "maxWidth": 400
+        }
+      ],
+      "right": [
+        {
+          "id": "omarchy.tray"
+        },
+        {
+          "id": "io.github.thisisgm.omapods"
+        },
+        {
+          "id": "omarchy.agents"
+        },
+        {
+          "id": "omarchy.bluetooth"
+        },
+        {
+          "id": "omarchy.network"
+        },
+        {
+          "id": "omarchy.audio"
+        },
+        {
+          "id": "omarchy.monitor"
+        },
+        {
+          "id": "omarchy.power"
+        }
+      ]
+    },
+    "position": "top",
+    "transparent": false
+  },
+  "idle": {
+    "lock": 600,
+    "screensaver": 150
+  },
+  "plugins": [],
+  "version": 1,
+  "disabledPlugins": [
+    "omarchy.menu"
+  ],
+  "cloneSourceRestores": [
+    "jvz.menu"
+  ]
+}

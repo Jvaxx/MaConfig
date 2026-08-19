@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# Center the focused column on screen, on Hyprland's scrolling layout.
+#
+# The scrolling layout has no "center" layout message. focus_fit_method = 0
+# centers on every focus change, and fit_into_view only scrolls when a column
+# hangs off the edge -- neither gives an on-demand "put this column in the
+# middle". So compute the offset ourselves and feed it to the `move` message,
+# which takes a relative displacement in logical pixels.
+#
+# Silently does nothing when the active window is floating, fullscreen, or on a
+# workspace that is not using the scrolling layout.
+
+set -euo pipefail
+
+active=$(hyprctl activewindow -j)
+[[ $(jq -r '.address // ""' <<<"$active") ]] || exit 0
+[[ $(jq -r '.floating' <<<"$active") == "false" ]] || exit 0
+[[ $(jq -r '.fullscreen' <<<"$active") == "0" ]] || exit 0
+[[ $(hyprctl activeworkspace -j | jq -r '.tiledLayout') == "scrolling" ]] || exit 0
+
+monitor_id=$(jq -r '.monitor' <<<"$active")
+monitor=$(hyprctl monitors -j | jq --argjson id "$monitor_id" '.[] | select(.id == $id)')
+[[ $monitor ]] || exit 0
+
+# hyprctl reports monitor width/height in physical pixels; the layout works in
+# logical ones. reserved is [left, top, right, bottom] (the Omarchy bar shows up
+# as index 1). Columns never overlap the reserved strip, so the usable band is
+# what we center inside.
+delta=$(jq -rn \
+  --argjson w "$(jq -r '.size[0]' <<<"$active")" \
+  --argjson x "$(jq -r '.at[0]' <<<"$active")" \
+  --argjson mon "$monitor" '
+    ($mon.width / $mon.scale | round)         as $logical  |
+    ($mon.x + $mon.reserved[0])               as $left     |
+    ($logical - $mon.reserved[0] - $mon.reserved[2]) as $avail |
+    ($left + (($avail - $w) / 2) - $x | round)
+  ')
+
+# Sub-pixel noise and columns wider than the screen: nothing worth doing.
+(( ${delta#-} < 2 )) && exit 0
+
+hyprctl dispatch "hl.dsp.layout(\"move $(printf '%+d' "$delta")\")" >/dev/null

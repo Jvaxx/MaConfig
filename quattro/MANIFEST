@@ -1,0 +1,43 @@
+# Fichiers/dossiers sauvegardés. Chemins relatifs à $HOME.
+# Une entrée par ligne. Lignes vides et commençant par # ignorées.
+# Ajouté ici = sauvegardé par sync.sh et restauré par restore.sh.
+
+# --- Hyprland (modifiés vs défauts Omarchy) ---
+.config/hypr/bindings.lua
+.config/hypr/input.lua
+.config/hypr/looknfeel.lua
+.config/hypr/monitors.lua
+
+# --- Layouts clavier XKB custom (référencés par hypr/input.lua) ---
+# Sans eux, kb_layout = "frmac,qwertyansi" ne compile pas.
+.config/xkb/symbols/frmac
+.config/xkb/symbols/qwertyansi
+
+# --- Scripts appelés par les keybindings (sans eux, les binds sont morts) ---
+.local/bin/kb-layout-toggle
+.local/bin/hypr-window-full-width
+.local/bin/hypr-scrolling-center-column
+
+# --- Omarchy shell ---
+.config/omarchy/shell.json
+.config/omarchy/shell.toml
+
+# --- Menu custom (plugin cloné depuis omarchy.menu) ---
+.config/omarchy/plugins/jvz.menu
+.config/omarchy/extensions/omarchy-menu.jsonc
+.config/omarchy/extensions/menu.sh
+
+# --- Divers Omarchy perso ---
+.config/omarchy/defaults/agent
+.config/omarchy/hooks/post-update.d/setup-agent.hook
+.config/omarchy/notes
+
+# --- Terminaux (modifiés vs défauts) ---
+.config/foot/foot.ini
+.config/kitty/kitty.conf
+
+# --- Outils CLI (modifiés vs défauts) ---
+.config/btop/btop.conf
+.config/starship.toml
+.config/tmux/tmux.conf
+.config/git/config

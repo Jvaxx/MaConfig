@@ -1,0 +1,1 @@
+io.github.thisisgm.omapods	https://github.com/thisisgm/omarchy-pods
