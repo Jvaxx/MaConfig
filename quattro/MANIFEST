@@ -24,6 +24,11 @@
 
 # --- Menu custom (plugin cloné depuis omarchy.menu) ---
 .config/omarchy/plugins/jvz.menu
+
+# --- Plugin maison : indicateur de position sur le layout scrolling ---
+# Tant qu'il n'est pas publié en dépôt git séparé, son code n'existe qu'ici.
+# Une fois publié, il passera dans external-plugins.txt (URL seule).
+.config/omarchy/plugins/jvz.scrolling
 .config/omarchy/extensions/omarchy-menu.jsonc
 .config/omarchy/extensions/menu.sh
 
