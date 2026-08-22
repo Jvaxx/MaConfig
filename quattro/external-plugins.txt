@@ -1,1 +1,2 @@
+io.github.jvaxx.scrolling-position	https://github.com/Jvaxx/omarchy-scrolling-position.git
 io.github.thisisgm.omapods	https://github.com/thisisgm/omarchy-pods
