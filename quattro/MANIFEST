@@ -17,7 +17,6 @@
 # --- Scripts appelés par les keybindings (sans eux, les binds sont morts) ---
 .local/bin/kb-layout-toggle
 .local/bin/hypr-window-full-width
-.local/bin/hypr-scrolling-center-column
 
 # --- Omarchy shell ---
 .config/omarchy/shell.json

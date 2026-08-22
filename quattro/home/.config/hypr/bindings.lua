@@ -96,14 +96,6 @@ hl.unbind("SUPER + CTRL + F") -- was: Tiled full screen (a no-op on scrolling)
 hl.unbind("SUPER + ALT + F") -- was: Full width (maximize; kept for dwindle)
 o.bind("SUPER + ALT + F", "Full width / cycle column width", "hypr-window-full-width")
 
--- Center the focused column. The scrolling layout has no "center" message:
--- fit_into_view only scrolls a column that hangs off an edge, and the centering
--- the docs mention under `focus` is really scrolling:focus_fit_method = 0, which
--- would center on EVERY focus change. ~/.local/bin/hypr-scrolling-center-column
--- computes the offset and feeds it to the `move` message instead, so it happens
--- only when asked. Natural follow-up to shrinking a column with the bind above.
-o.bind("SUPER + ALT + C", "Center column", "hypr-scrolling-center-column")
-
 -- --- Save/restore window width ----------------------------------------------
 -- Omarchy puts these on SUPER + (ALT +) Home, but the MAD68 is a 65% board with
 -- no dedicated Home key -- it only exists on the Fn layer. D as in "dimension";

@@ -4,8 +4,8 @@ format = "$conda$python[$directory$git_branch$git_status]($style)$character"
 
 [conda]
 format = '[$symbol\($environment\)]($style) '
-symbol = " "
-style = "bold green"
+symbol = "🐍 "
+style = "bold yellow"
 ignore_base = false
 
 # Local venvs (python -m venv / virtualenv) set VIRTUAL_ENV; conda uses $conda above.

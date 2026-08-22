@@ -3,11 +3,21 @@
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#general
 -- Tighter gaps, thicker border (Omarchy defaults: 5 / 10 / 2).
 hl.config({
-  general = {
-    gaps_in = 3,
-    gaps_out = 6,
-    border_size = 3,
-  },
+    general = {
+        gaps_in = 2,
+        gaps_out = 2,
+        border_size = 2,
+    },
+})
+
+-- Scrolling layout: center the focused column on every focus change. The default
+-- (focus_fit_method = 1) only scrolls far enough to bring the column fully into
+-- view, flush to the edge it came from, which leaves the next column entirely
+-- hidden and easy to forget. Centering always shows a chunk of both neighbours.
+hl.config({
+    scrolling = {
+        focus_fit_method = 0,
+    },
 })
 
 -- https://wiki.hypr.land/Configuring/Advanced-and-Cool/Animations/
