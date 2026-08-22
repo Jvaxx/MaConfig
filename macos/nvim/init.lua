@@ -98,6 +98,10 @@ local lsp_servers = {
     rust_analyzer = {},
     gopls = {},
     pyright = {
+        -- INFO: Ruff gère le tri des imports, on désactive celui de pyright
+        pyright = {
+            disableOrganizeImports = true,
+        },
         python = {
             analysis = {
                 typeCheckingMode = "basic", -- ou "strict" pour typer fortement
@@ -107,6 +111,39 @@ local lsp_servers = {
         },
     },
     ruff = {}, -- Formattage
+}
+
+-- INFO: Détection de l'environnement virtuel Python du projet
+-- Cherche un interpréteur dans <racine>/.venv ou <racine>/venv, sinon retombe
+-- sur le python3 du PATH (comportement par défaut de pyright).
+local function resolve_python_path(root_dir)
+    if root_dir then
+        for _, venv in ipairs({ ".venv", "venv" }) do
+            local candidate = root_dir .. "/" .. venv .. "/bin/python"
+            if vim.fn.executable(candidate) == 1 then
+                return candidate
+            end
+        end
+    end
+    return vim.fn.exepath("python3") ~= "" and vim.fn.exepath("python3") or "python3"
+end
+
+-- INFO: Réglages spécifiques par serveur (au-delà des simples `settings`)
+local lsp_overrides = {
+    pyright = {
+        -- Injecte le chemin de l'interpréteur avant le démarrage du serveur
+        before_init = function(_, config_pyright)
+            config_pyright.settings = config_pyright.settings or {}
+            config_pyright.settings.python = config_pyright.settings.python or {}
+            config_pyright.settings.python.pythonPath = resolve_python_path(config_pyright.root_dir)
+        end,
+    },
+    ruff = {
+        -- Ruff est un linter/formatteur : pyright reste seul maître du hover
+        on_attach = function(client, _)
+            client.server_capabilities.hoverProvider = nil
+        end,
+    },
 }
 
 -- INFO: Autopairs (fermeture automatique des délimiteurs)
@@ -196,11 +233,18 @@ require("mason-tool-installer").setup({
 -- to check what clients are attached to the current buffer, use
 -- `:checkhealth vim.lsp`. to view default lsp keybindings, use `:h lsp-defaults`.
 for server, config_lsp in pairs(lsp_servers) do
-    vim.lsp.config(server, {
+    local overrides = lsp_overrides[server] or {}
+
+    vim.lsp.config(server, vim.tbl_extend("force", {
         settings = config_lsp,
 
         -- only create the keymaps if the server attaches successfully
         on_attach = function(client, bufnr)
+            -- Réglages propres au serveur, appliqués avant les raccourcis communs
+            if overrides.on_attach then
+                overrides.on_attach(client, bufnr)
+            end
+
             vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = bufnr, desc = "Definition" })
             vim.keymap.set("n", "gD", vim.lsp.buf.declaration, { buffer = bufnr, desc = "Declaration" })
             vim.keymap.set("n", "<leader>cf", vim.lsp.buf.format, { buffer = bufnr, desc = "Code Format" })
@@ -226,7 +270,7 @@ for server, config_lsp in pairs(lsp_servers) do
                 })
             end
         end,
-    })
+    }, { before_init = overrides.before_init }))
 end
 
 -- INFO: Telescope
