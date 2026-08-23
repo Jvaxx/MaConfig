@@ -16,7 +16,7 @@ hl.config({
 -- hidden and easy to forget. Centering always shows a chunk of both neighbours.
 hl.config({
     scrolling = {
-        focus_fit_method = 0,
+        focus_fit_method = 1,
     },
 })
 

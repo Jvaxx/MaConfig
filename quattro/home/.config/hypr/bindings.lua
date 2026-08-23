@@ -11,6 +11,15 @@
 --   2. Bindings resolve against layout index 0 (frmac, AZERTY), so a keysym
 --      names the key AZERTY puts there -- not the QWERTY legend on the board.
 
+-- --- Perplexity web app ----------------------------------------------------
+-- Stock Omarchy puts ChatGPT on SUPER+SHIFT+A (see
+-- $OMARCHY_PATH/default/hypr/bindings/applications.lua). Replaced with
+-- Perplexity, launched as a Chromium --app window by omarchy-launch-webapp.
+-- focus = false keeps it on plain omarchy-launch-webapp: every press opens a
+-- new window rather than focusing an existing one.
+hl.unbind("SUPER + SHIFT + A") -- was: ChatGPT
+o.bind("SUPER + SHIFT + A", "Perplexity", { webapp = "https://www.perplexity.ai", focus = false })
+
 -- --- Keyboard layout toggle -------------------------------------------------
 -- CTRL+SHIFT is the only modifier pair Omarchy leaves entirely unused, and the
 -- only one touching neither swapped key. CTRL+SHIFT+SPACE is still free in
