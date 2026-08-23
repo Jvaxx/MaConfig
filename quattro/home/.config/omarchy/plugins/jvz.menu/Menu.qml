@@ -597,6 +597,20 @@ Item {
 
       currentRows.sort(searchSort)
       drilldownRows.sort(searchSort)
+
+      // Rows of the current menu sort ahead of deeper ones, which is right
+      // until a deeper row matched far better: "ste" starts Steam and only
+      // sits mid-word in System. Score tiers say so (searchScore multiplies
+      // the tier by 1000 and keeps depth/order below it), so lift the
+      // deeper rows that beat every local match out of the drilldown group.
+      var tierOf = function (row) { return Math.floor(row.score / 1000) }
+      var bestLocalTier = currentRows.length > 0 ? tierOf(currentRows[0]) : Infinity
+      var promoted = []
+      while (drilldownRows.length > 0 && tierOf(drilldownRows[0]) < bestLocalTier) {
+        promoted.push(drilldownRows.shift())
+      }
+      currentRows = promoted.concat(currentRows)
+
       root.searchDivider = currentRows.length > 0 && drilldownRows.length > 0
       if (root.searchDivider) {
         for (var d = 0; d < drilldownRows.length; d++) drilldownRows[d].section = "drilldown"
