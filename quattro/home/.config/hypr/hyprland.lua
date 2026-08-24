@@ -33,3 +33,16 @@ require("default.hypr.toggles")
 -- ~/.local/state/omarchy/workspace-layouts/; special workspaces aren't, so the
 -- rule lives here.
 hl.workspace_rule({ workspace = "special:scratchpad", layout = "scrolling" })
+
+-- Games keep simulating when off-screen.
+-- On Wayland a hidden window stops getting frame callbacks, so its render loop
+-- blocks in swapbuffers. Factorio updates and renders on the same thread, so a
+-- blocked present freezes/slows the simulation. render_unfocused makes Hyprland
+-- keep feeding frame events to the window while it isn't visible.
+hl.config({
+    misc = {
+        render_unfocused_fps = 60, -- default 15
+    },
+})
+
+o.window({ class = "^(factorio)$" }, { render_unfocused = true })
