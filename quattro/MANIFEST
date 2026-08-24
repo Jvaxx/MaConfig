@@ -41,6 +41,16 @@
 .config/omarchy/hooks/post-update.d/setup-agent.hook
 .config/omarchy/notes
 
+# --- Web apps perso (créées via `omarchy webapp install`) ---
+# Les binds SUPER+SHIFT+A / +C passent l'URL directement à omarchy-launch-webapp,
+# donc ils marchent sans ces fichiers : ce sont les lanceurs (menu SUPER+SPACE)
+# et leurs icônes qui manqueraient. Les web apps stock (Google *, Discord...)
+# ne sont pas listées : `omarchy refresh applications` les recrée.
+.local/share/applications/Claude.desktop
+.local/share/applications/Perplexity.desktop
+.local/share/icons/hicolor/256x256/apps/claude.png
+.local/share/icons/hicolor/256x256/apps/perplexity.png
+
 # --- Terminaux (modifiés vs défauts) ---
 .config/foot/foot.ini
 .config/kitty/kitty.conf

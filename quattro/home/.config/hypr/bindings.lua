@@ -20,6 +20,18 @@
 hl.unbind("SUPER + SHIFT + A") -- was: ChatGPT
 o.bind("SUPER + SHIFT + A", "Perplexity", { webapp = "https://www.perplexity.ai", focus = false })
 
+-- --- Claude web app -------------------------------------------------------
+-- Stock Omarchy puts the HEY calendar on SUPER+SHIFT+C (see
+-- $OMARCHY_PATH/default/hypr/bindings/applications.lua). That bind is baked
+-- into the Hyprland defaults, so removing the HEY web app from the menus left
+-- the key still pointing at app.hey.com -- it has to be unbound here.
+-- Claude runs as a Chromium --app window via omarchy-launch-webapp, matching
+-- the "Claude" launcher created with `omarchy webapp install`.
+-- focus = false keeps it on plain omarchy-launch-webapp: every press opens a
+-- new window rather than focusing an existing one (same as Perplexity below).
+hl.unbind("SUPER + SHIFT + C") -- was: Calendar (app.hey.com)
+o.bind("SUPER + SHIFT + C", "Claude", { webapp = "https://claude.ai", focus = false })
+
 -- --- Keyboard layout toggle -------------------------------------------------
 -- CTRL+SHIFT is the only modifier pair Omarchy leaves entirely unused, and the
 -- only one touching neither swapped key. CTRL+SHIFT+SPACE is still free in

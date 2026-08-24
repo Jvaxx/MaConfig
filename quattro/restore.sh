@@ -65,6 +65,10 @@ fi
 
 echo
 echo "Application des changements..."
+# Lanceurs et icônes des web apps perso : les fichiers copiés ne sont visibles
+# dans le launcher qu'après régénération des caches.
+gtk-update-icon-cache "$DEST/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+update-desktop-database "$DEST/.local/share/applications" >/dev/null 2>&1 || true
 hyprctl reload            >/dev/null 2>&1 || true
 hyprctl configerrors      || true
 omarchy restart shell     >/dev/null 2>&1 || true
