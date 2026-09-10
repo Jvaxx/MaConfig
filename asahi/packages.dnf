@@ -1,0 +1,146 @@
+# Paquets pour Fedora Asahi Remix (MacBook Pro M3 Pro, aarch64, KDE Plasma).
+#
+# Dérivé de quattro/packages.txt (232 paquets pacman) après élagage : voir
+# DROPPED.md pour la liste de ce qui a sauté et pourquoi.
+# Lu par bootstrap.sh. Format :
+#   #@repo   <nom>   -> section installée depuis les dépôts Fedora
+#   #@copr   <owner/projet>  -> section précédée d'un `dnf copr enable`
+#   #@manual                 -> section informative, gérée par bootstrap.sh
+# Lignes vides et # ignorées à l'intérieur des sections.
+
+# =====================================================================
+# TIER 1 — shell & CLI core
+# =====================================================================
+#@repo
+bash-completion
+bat
+btop
+direnv
+eza
+fd-find
+fzf
+git
+gh
+glow
+gum
+jq
+less
+man-db
+plocate
+ripgrep
+tealdeer
+tmux
+unzip
+zoxide
+fastfetch
+wl-clipboard
+# Réseau / inspection, équivalents des paquets Arch du même rôle
+nmap-ncat
+socat
+whois
+inxi
+inotify-tools
+xmlstarlet
+qrencode
+zbar
+ImageMagick
+yt-dlp
+
+# starship n'est plus dans les dépôts Fedora depuis F37.
+#@copr atim/starship
+starship
+
+# lazygit et lazydocker ne sont pas packagés par Fedora.
+#@copr atim/lazygit
+lazygit
+
+# =====================================================================
+# TIER 2 — toolchains de dev (ce que les LSP de nvim attendent)
+# =====================================================================
+# lsp_servers dans init.lua = lua_ls, clangd, rust_analyzer, gopls, pyright, ruff.
+# mason les télécharge, mais clangd/gopls/rust-analyzer système sont plus fiables
+# en aarch64, et pyright a besoin de node.
+#@repo
+clang
+clang-tools-extra
+llvm
+cmake
+ninja-build
+make
+gcc
+gcc-c++
+bear
+golang
+python3
+python3-pip
+python3-virtualenv
+pipx
+lua
+luarocks
+nodejs
+npm
+rust
+cargo
+rust-analyzer
+gopls
+# Conteneurs : podman est le natif Fedora (rootless par défaut), docker-compose
+# fonctionne via podman-docker + le socket podman.
+podman
+podman-compose
+podman-docker
+# Nécessaires au build de la tarball nvim / des plugins natifs (telescope-fzf)
+git-core
+curl
+tar
+gzip
+
+# =====================================================================
+# TIER 3 — terminal, polices, saisie
+# =====================================================================
+#@repo
+# foot : seul terminal du set qui rend sur CPU -> utilisable sans GPU sur M3.
+foot
+google-noto-fonts-common
+google-noto-sans-fonts
+google-noto-serif-fonts
+google-noto-sans-cjk-fonts
+google-noto-color-emoji-fonts
+google-noto-emoji-fonts
+# Pas d'outils XKB : aucun layout custom sur cette machine, les défauts Plasma
+# sont déjà le comportement voulu (cf. DROPPED.md §8).
+
+#@copr maveonair/jetbrains-mono-nerd-fonts
+jetbrains-mono-nerd-fonts
+
+# =====================================================================
+# TIER 4 — GUI sans besoin de GPU
+# =====================================================================
+# Rappel : pas d'accélération 3D sur M3 pour l'instant, tout passe par llvmpipe.
+# Rien de lourd en OpenGL ici. Les visionneuses/gestionnaires de fichiers GNOME
+# de quattro sont remplacés par les équivalents KDE déjà présents
+# (dolphin, okular, gwenview, ark, spectacle, kwalletmanager).
+#@repo
+mpv
+libreoffice-calc
+libreoffice-writer
+libreoffice-impress
+xournalpp
+ocrmypdf
+tesseract
+tesseract-langpack-eng
+tesseract-langpack-fra
+
+# =====================================================================
+# Hors dnf — installés par bootstrap.sh
+# =====================================================================
+#@manual
+# neovim         tarball aarch64 officielle -> ~/.local/nvim (dnf = 0.11.x, trop vieux)
+# mise           curl https://mise.run       (gère les runtimes par projet)
+# uv             curl astral.sh/uv/install   (aarch64 supporté)
+# dua-cli        cargo install dua-cli
+# diskonaut      cargo install diskonaut
+# tree-sitter-cli  cargo install tree-sitter-cli  (requis par :TSInstall from source)
+# lazydocker     go install github.com/jesseduffield/lazydocker@latest
+# localsend      Flatpak (org.localsend.localsend_app), build aarch64 dispo
+# obsidian       Flatpak (md.obsidian.Obsidian)
+# signal         Flatpak (org.signal.Signal) — vérifier la dispo aarch64

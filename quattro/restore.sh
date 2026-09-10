@@ -4,8 +4,12 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/.." && pwd)"
 DEST="$HOME"
 SRC="$HERE/home"
+# Arbre partagé avec les autres hôtes (voir ../shared). Les entrées du MANIFEST
+# préfixées `shared:` en viennent au lieu de ./home.
+SHARED="$ROOT/shared/home"
 MANIFEST="$HERE/MANIFEST"
 STAMP="$(date +%s)"
 
@@ -19,8 +23,9 @@ for a in "$@"; do
 done
 
 [[ -d $SRC ]] || { echo "Aucune sauvegarde dans $SRC — lance sync.sh d'abord."; exit 1; }
+[[ -d $SHARED ]] || { echo "Arbre partagé introuvable: $SHARED"; exit 1; }
 
-echo "Restauration depuis $SRC vers $DEST"
+echo "Restauration depuis $SRC (+ $SHARED) vers $DEST"
 [[ -f $HERE/STATE ]] && sed 's/^/  /' "$HERE/STATE"
 echo
 
@@ -33,16 +38,29 @@ while IFS= read -r line; do
   line="${line%%#*}"; line="$(echo "$line" | xargs || true)"
   [[ -z $line ]] && continue
 
-  src="$SRC/$line"
-  dst="$DEST/$line"
+  if [[ $line == shared:* ]]; then
+    rel="${line#shared:}"; src="$SHARED/$rel"; tag="shared"
+  else
+    rel="$line";           src="$SRC/$rel";    tag="local "
+  fi
+  dst="$DEST/$rel"
   [[ -e $src ]] || continue
 
-  if (( DRY )); then echo "  would restore $line"; continue; fi
+  # Déjà un symlink vers la source (cas de ~/.config/nvim) : le remplacer par une
+  # copie casserait le lien et ferait diverger $HOME du dépôt à la prochaine
+  # édition. On le laisse tel quel.
+  if [[ -L $dst ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
+    echo "  link     [$tag] $rel"
+    continue
+  fi
 
-  [[ -e $dst ]] && mv "$dst" "$dst.bak.$STAMP"
+  if (( DRY )); then echo "  would restore [$tag] $rel"; continue; fi
+
+  # -e est faux pour un symlink cassé, d'où le -L en complément.
+  [[ -e $dst || -L $dst ]] && mv "$dst" "$dst.bak.$STAMP"
   mkdir -p "$(dirname "$dst")"
   cp -a "$src" "$dst"
-  echo "  restored $line"
+  echo "  restored [$tag] $rel"
 done < "$MANIFEST"
 
 (( DRY )) && exit 0

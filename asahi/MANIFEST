@@ -1,0 +1,47 @@
+# Fichiers/dossiers gérés sur l'hôte Fedora Asahi Remix (MacBook Pro M3 Pro, KDE).
+# Chemins relatifs à $HOME. Lignes vides et commençant par # ignorées.
+#
+# Deux sources possibles par entrée :
+#   .config/foo          -> ./home/.config/foo          (spécifique à cet hôte)
+#   shared:.config/foo   -> ../shared/home/.config/foo  (partagé avec quattro)
+#
+# Règle de partage : tout ce qui référence le système de thèmes Omarchy
+# (~/.local/state/omarchy/current/...) est forcément spécifique à l'hôte.
+
+# --- Neovim (config vim.pack, identique sur les deux machines) ---
+# Exige nvim >= 0.12 : bootstrap.sh installe la tarball aarch64 officielle,
+# les dépôts Fedora ne fournissent que 0.11.x.
+shared:.config/nvim
+
+# --- Environnement shell ---
+# .bashrc/.bash_profile sont locaux (pas d'omarchy, pas de conda/grok/LM Studio),
+# mais ils sourcent les trois fragments partagés ci-dessous.
+.bashrc
+.bash_profile
+shared:.config/shell/envs.bash
+shared:.config/shell/aliases.bash
+shared:.config/shell/init.bash
+
+# --- Outils CLI ---
+shared:.config/tmux/tmux.conf
+shared:.config/starship.toml
+shared:.config/git/config
+# btop : color_theme est "current" sur quattro (symlink Omarchy), figé sur
+# gruvbox_material_dark ici. D'où la copie locale.
+.config/btop/btop.conf
+
+# --- Terminal ---
+# foot uniquement : rendu CPU, donc utilisable sans accélération GPU sur M3.
+# kitty/alacritty/ghostty exigent OpenGL et ne sont pas installés ici.
+.config/foot/foot.ini
+
+# --- Clavier ---
+# Pas de layout XKB custom ici, volontairement. frmac/qwertyansi existent sur
+# quattro pour faire *imiter le Mac* à un clavier PC ; sur le Mac lui-même le
+# comportement visé est celui par défaut. Rien à configurer.
+#
+# ~/.XCompose local (include "%L" au lieu du xcompose Omarchy), le contenu vient
+# des deux fichiers partagés : emoji (copie du set Omarchy) + personal.
+.XCompose
+shared:.config/xcompose/emoji
+shared:.config/xcompose/personal

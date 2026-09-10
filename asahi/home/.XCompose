@@ -1,0 +1,18 @@
+# Compose rules — Fedora Asahi Remix.
+#
+# Host-specific because the quattro copy starts with
+#   include "/usr/share/omarchy/default/xcompose"
+# which does not exist on Fedora. Ce fichier reconstitue la même chose à partir
+# de l'arbre partagé.
+#
+# Apply after editing: log out and back in, or restart the affected app.
+# Plasma Wayland reads this through libxkbcommon at client startup.
+
+# Séquences Compose système pour la locale courante.
+include "%L"
+
+# Les 24 emoji + la typographie du xcompose Omarchy.
+include "%H/.config/xcompose/emoji"
+
+# Règles perso, partagées avec quattro.
+include "%H/.config/xcompose/personal"

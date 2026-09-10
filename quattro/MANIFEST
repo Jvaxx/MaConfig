@@ -1,6 +1,12 @@
 # Fichiers/dossiers sauvegardés. Chemins relatifs à $HOME.
 # Une entrée par ligne. Lignes vides et commençant par # ignorées.
 # Ajouté ici = sauvegardé par sync.sh et restauré par restore.sh.
+#
+# Deux sources possibles par entrée :
+#   .config/foo          -> ./home/.config/foo          (propre à cet hôte)
+#   shared:.config/foo   -> ../shared/home/.config/foo  (partagé avec asahi/)
+# Règle : tout ce qui touche Hyprland ou le système de thèmes Omarchy
+# (~/.local/state/omarchy/current/...) reste local.
 
 # --- Hyprland (modifiés vs défauts Omarchy) ---
 .config/hypr/hyprland.lua
@@ -11,6 +17,9 @@
 
 # --- Layouts clavier XKB custom (référencés par hypr/input.lua) ---
 # Sans eux, kb_layout = "frmac,qwertyansi" ne compile pas.
+# Locaux, PAS partagés : frmac reproduit le comportement clavier du Mac sur un
+# clavier PC. Sur le MacBook lui-même, les défauts font déjà l'affaire, donc
+# l'hôte asahi n'en veut pas.
 .config/xkb/symbols/frmac
 .config/xkb/symbols/qwertyansi
 
@@ -74,10 +83,27 @@
 # --- Règles de composition clavier custom (~/.XCompose) ---
 # Entièrement réécrit vs le défaut Omarchy. Appliquer avec :
 #   omarchy restart xcompose
+# Le fichier reste local (il inclut /usr/share/omarchy/default/xcompose, absent
+# ailleurs) ; les règles perso vivent dans le fichier partagé ci-dessous.
+# shared:.config/xcompose/emoji n'est volontairement PAS listé ici : ce serait
+# un doublon du xcompose Omarchy déjà inclus par .XCompose.
 .XCompose
+shared:.config/xcompose/personal
+
+# --- Neovim ---
+# Config vim.pack (exige nvim >= 0.12). ~/.config/nvim est un symlink vers
+# ../shared/home/.config/nvim : sync.sh le détecte et ne recopie rien.
+shared:.config/nvim
 
 # --- Outils CLI (modifiés vs défauts) ---
+# btop reste local : color_theme = "current" pointe sur le symlink de thème
+# Omarchy, qui n'existe que sur cette machine.
 .config/btop/btop.conf
-.config/starship.toml
-.config/tmux/tmux.conf
-.config/git/config
+shared:.config/starship.toml
+shared:.config/tmux/tmux.conf
+shared:.config/git/config
+
+# --- Fragments shell portables (../shared/home/.config/shell) ---
+# Pas listés ici volontairement : sur cet hôte, aliases/env/init viennent déjà de
+# /usr/share/omarchy/default/bash/*, les sourcer ferait doublon. Ils existent
+# pour les hôtes sans Omarchy (voir asahi/MANIFEST).

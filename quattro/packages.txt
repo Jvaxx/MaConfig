@@ -1,4 +1,4 @@
-# Paquets explicites (pacman -Qqe) — 2026-09-10T18:34:21+02:00
+# Paquets explicites (pacman -Qqe) — 2026-09-10T18:59:29+02:00
 # Référence uniquement : à réinstaller à la main après restauration.
 aether
 alacritty

@@ -1,0 +1,11 @@
+# Règles Compose personnelles, partagées entre les hôtes.
+# Chargé via un include depuis le ~/.XCompose de chaque machine, après
+# l'include système propre à cet hôte.
+#
+# Ne contient QUE ce qui est spécifique à moi : les emoji et la typographie
+# vivent dans ./emoji, pour ne pas entrer en conflit avec le xcompose Omarchy
+# que quattro inclut déjà.
+
+# Identification
+<Multi_key> <space> <n> : "Jvaxx"
+<Multi_key> <space> <e> : "jeanvaleryze@gmail.com"

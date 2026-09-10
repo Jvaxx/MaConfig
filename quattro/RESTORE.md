@@ -16,6 +16,10 @@ cd ~/Documents/MaConfig/quattro
 externes listés dans `external-plugins.txt`, puis relance Hyprland, le shell
 Omarchy et les terminaux.
 
+Certaines entrées viennent de `../shared/home` et non de `home/` : ce sont
+celles préfixées `shared:` dans le MANIFEST, partagées avec l'hôte `asahi/`
+(MacBook M3 sous Fedora/KDE). Voir la section Structure plus bas.
+
 ## Sauvegarde (après une modif)
 
 ```bash
@@ -26,13 +30,16 @@ git push
 ```
 
 Pour ajouter/retirer un fichier suivi : éditer `MANIFEST` (chemins relatifs à `$HOME`).
+Préfixer par `shared:` pour ranger l'entrée dans l'arbre partagé plutôt que dans
+`home/`.
 
 ## Structure
 
 | Chemin | Rôle |
 |---|---|
-| `MANIFEST` | liste des fichiers suivis |
-| `home/` | copie fidèle des fichiers, arborescence `$HOME` |
+| `MANIFEST` | liste des fichiers suivis (`shared:` = vient de `../shared/home`) |
+| `home/` | fichiers propres à cet hôte, arborescence `$HOME` |
+| `../shared/home/` | fichiers partagés avec les autres hôtes, même arborescence |
 | `sync.sh` / `restore.sh` | backup / restauration |
 | `STATE` | version Omarchy + date du dernier sync |
 | `external-plugins.txt` | plugins shell clonés depuis GitHub (`id<TAB>url`) |
@@ -171,7 +178,9 @@ systemctl --user enable --now bbox-mic-bridge
 
 ## Non sauvegardé volontairement
 
-- `~/.config/nvim` → symlink vers `MaConfig/macos/nvim`, déjà versionné.
+- `~/.config/nvim` → symlink vers `MaConfig/shared/home/.config/nvim`
+  (auparavant `MaConfig/macos/nvim`), désormais listé au MANIFEST en `shared:`.
+  `sync.sh` détecte le symlink et ne recopie rien.
 - Binaires (`librepods`, `librepods-ctl`) et wrappers d'agents dans `~/.local/bin` :
   réinstallés par leurs outils respectifs.
 - Thèmes : aucun thème custom dans `~/.config/omarchy/themes/`.
