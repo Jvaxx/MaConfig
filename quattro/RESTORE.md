@@ -192,8 +192,6 @@ systemctl --user enable --now bbox-mic-bridge
   non suivis, pas liés à un keybind Hyprland.
 - `~/.config/mise/config.toml` (versions d'outils) et
   `~/.config/opencode/opencode.json` : non suivis.
-- L'ancien dossier `../omarchy/` du repo date d'Omarchy 2.x (waybar, walker,
-  fichiers `.conf`) — **obsolète**, ne pas restaurer sur Quattro.
 
 ## Après restauration — vérifications
 
