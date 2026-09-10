@@ -43,6 +43,18 @@ done < "$MANIFEST"
   echo "hostname=$(hostname)"
 } > "$HERE/STATE"
 
+# Paquets installés explicitement. Liste de référence pour la restauration
+# manuelle (restore.sh n'installe rien) : sans elle, on restaure la config de
+# songrec / direnv / voxtype / librepods sans les paquets correspondants.
+if command -v pacman >/dev/null 2>&1; then
+  {
+    echo "# Paquets explicites (pacman -Qqe) — $(date -Iseconds)"
+    echo "# Référence uniquement : à réinstaller à la main après restauration."
+    pacman -Qqe
+  } > "$HERE/packages.txt"
+  echo "  list packages.txt ($(pacman -Qqe | wc -l) paquets)"
+fi
+
 # Plugins shell installés depuis un dépôt externe : on ne stocke que l'URL
 : > "$HERE/external-plugins.txt"
 for p in "$SRC"/.config/omarchy/plugins/*/; do

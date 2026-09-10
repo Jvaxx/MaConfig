@@ -1,0 +1,521 @@
+#!/usr/bin/env python3
+"""Bridge the Bbox remote's built-in microphone into local voxtype dictation.
+
+Pipeline:
+    remote mic key (HID report 0x03) or `bbox-mic toggle`
+      -> HID output report 0x0d "84 00 00 01" over /dev/hidrawN  (start)
+      -> BlueZ GATT notifications on FFF4                        (IMA-ADPCM)
+      -> decode to 16 kHz mono s16
+      -> pw-cat --playback, linked into the "bbox_remote_mic" virtual source
+      -> default PipeWire source switched to it, then `voxtype record start`
+      -> voxtype transcribes and types; default source restored afterwards
+
+Deliberate constraints (see ~/Documents/bbox_remote/mic_info.md):
+  * NEVER touch HID characteristics over D-Bus. BlueZ owns the HID service;
+    doing so once disabled the remote's buttons. Commands go via hidraw, and
+    only the non-HID FFF4 characteristic is subscribed.
+  * `voxtype record start` is issued only after the first audio frame really
+    arrives (~130 ms after the start command), so no speech is clipped.
+  * The remote is never left recording: every exit path sends stop.
+
+Reference decoder implementation: ~/Documents/bbox_remote/capture/decode_capture.py
+"""
+import array
+import os
+import signal
+import socket
+import subprocess
+import sys
+import threading
+import time
+
+import gi
+gi.require_version('Gio', '2.0')
+from gi.repository import Gio, GLib  # noqa: E402
+
+ADDRESS = 'F0:5E:CD:41:29:B2'
+HID_UNIQ = ADDRESS.lower()
+DEV_PATH = '/org/bluez/hci0/dev_' + ADDRESS.replace(':', '_')
+FFF4 = '0000fff4-0000-1000-8000-00805f9b34fb'
+CI = 'org.bluez.GattCharacteristic1'
+START_CMD = bytes.fromhex('0d84000001')
+STOP_CMD = bytes.fromhex('0d84000101')
+KEY_REPORT_ID = 0x03
+KEY_VOICECOMMAND = 0xCF
+
+VIRT_SOURCE = 'bbox_remote_mic'
+FEED_NODE = 'bbox_mic_feed'
+RATE = 16000
+FIRST_FRAME_TIMEOUT = 2.0     # seconds to wait for audio before giving up
+MAX_RECORD_SECONDS = 65       # hard cap; voxtype's own cap is 60
+KEY_DEBOUNCE = 0.6            # ignore repeat mic-key pulses within this window
+
+RUNTIME = os.environ.get('XDG_RUNTIME_DIR', f'/run/user/{os.getuid()}')
+SOCKET_PATH = os.path.join(RUNTIME, 'bbox-mic.sock')
+VOXTYPE_STATE = os.path.join(RUNTIME, 'voxtype', 'state')
+
+IMA_INDEXES = [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8]
+IMA_STEPS = [
+    7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
+    50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
+    253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
+    1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024,
+    3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493,
+    10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623,
+    27086, 29794, 32767,
+]
+LAST_INDEX = len(IMA_STEPS) - 1
+DELIMITER = b'\xaa' * 20
+
+
+def log(msg):
+    print(f'[bbox-mic] {msg}', flush=True)
+
+
+def clamp_pred(v):
+    return -32768 if v < -32768 else (32767 if v > 32767 else v)
+
+
+def clamp_index(v):
+    return 0 if v < 0 else (LAST_INDEX if v > LAST_INDEX else v)
+
+
+def nibble_to_pcm(nib, step, pred):
+    diff = step >> 3
+    if nib & 4:
+        diff += step
+    if nib & 2:
+        diff += step >> 1
+    if nib & 1:
+        diff += step >> 2
+    return clamp_pred(pred - diff if nib & 8 else pred + diff)
+
+
+class Decoder:
+    """Frame-incremental port of the decoder in RemoteControl.apk."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.next_part = 0
+        self.started = False
+        self.buf = bytearray(100)
+
+    def feed(self, part):
+        if len(part) != 20 or part == DELIMITER:
+            self.next_part, self.started = 0, True
+            return None
+        if not self.started:
+            return None
+        self.buf[self.next_part * 20:(self.next_part + 1) * 20] = part
+        self.next_part += 1
+        if self.next_part != 5:
+            return None
+        self.next_part, self.started = 0, False
+        return self._decode()
+
+    def _decode(self):
+        f = self.buf
+        index = clamp_index(f[3] - 256 if f[3] >= 128 else f[3])
+        pred = clamp_pred(int.from_bytes(bytes(f[1:3]), 'little', signed=True))
+        out = array.array('h')
+        for i in range(4, 100):
+            byte = f[i]
+            lo = byte & 15
+            pred = nibble_to_pcm(lo, IMA_STEPS[index], pred)
+            out.append(pred)
+            index = clamp_index(index + IMA_INDEXES[lo])
+            hi = byte >> 4
+            pred = nibble_to_pcm(hi, IMA_STEPS[index], pred)
+            out.append(pred)
+            index = clamp_index(index + IMA_INDEXES[hi])
+        return out
+
+
+def run(cmd, **kw):
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=5, **kw)
+
+
+def find_hidraw():
+    for entry in sorted(os.listdir('/sys/class/hidraw')):
+        try:
+            with open(f'/sys/class/hidraw/{entry}/device/uevent') as fh:
+                if f'HID_UNIQ={HID_UNIQ}' in fh.read():
+                    return f'/dev/{entry}'
+        except OSError:
+            continue
+    return None
+
+
+class Bridge:
+    def __init__(self):
+        self.bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+        self.loop = GLib.MainLoop()
+        self.state = 'idle'
+        self.decoder = Decoder()
+        self.audio_path = None
+        self.hidraw_path = None
+        self.hid_fd = None
+        self.hid_watch = None
+        self.feed = None
+        self.saved_source = None
+        self.frames = 0
+        self.last_key = 0.0
+        self.timers = []
+        self.subscribed = False
+        self.bus.signal_subscribe(
+            'org.bluez', 'org.freedesktop.DBus.Properties', 'PropertiesChanged',
+            None, None, Gio.DBusSignalFlags.NONE, self._on_props, None)
+
+    # ---------------------------------------------------------------- helpers
+    def call(self, path, iface, method, args=None):
+        return self.bus.call_sync('org.bluez', path, iface, method, args, None,
+                                  Gio.DBusCallFlags.NONE, 4000, None)
+
+    def add_timer(self, ms, fn):
+        self.timers.append(GLib.timeout_add(ms, fn))
+
+    def clear_timers(self):
+        for t in self.timers:
+            GLib.source_remove(t)
+        self.timers = []
+
+    def resolve_audio(self):
+        objects = self.call('/', 'org.freedesktop.DBus.ObjectManager',
+                            'GetManagedObjects').unpack()[0]
+        dev = objects.get(DEV_PATH, {}).get('org.bluez.Device1')
+        if not dev or not dev.get('Connected'):
+            return None, 'remote not connected'
+        for path, ifaces in objects.items():
+            if path.startswith(DEV_PATH + '/') and ifaces.get(CI, {}).get('UUID') == FFF4:
+                return path, None
+        return None, 'FFF4 characteristic not found'
+
+    # ------------------------------------------------------------ hidraw side
+    def open_hidraw(self):
+        path = find_hidraw()
+        if not path:
+            return False
+        if self.hidraw_path == path and self.hid_fd is not None:
+            return True
+        self.close_hidraw()
+        try:
+            fd = os.open(path, os.O_RDWR | os.O_NONBLOCK)
+        except OSError as e:
+            log(f'cannot open {path}: {e} (is the udev rule installed?)')
+            return False
+        self.hidraw_path = path
+        self.hid_fd = fd
+        self.hid_watch = GLib.io_add_watch(
+            GLib.IOChannel.unix_new(fd), GLib.PRIORITY_DEFAULT,
+            GLib.IOCondition.IN | GLib.IOCondition.ERR | GLib.IOCondition.HUP,
+            self._on_hid_readable)
+        log(f'watching {path} for the mic key')
+        return True
+
+    def close_hidraw(self):
+        if self.hid_watch:
+            GLib.source_remove(self.hid_watch)
+            self.hid_watch = None
+        if self.hid_fd is not None:
+            try:
+                os.close(self.hid_fd)
+            except OSError:
+                pass
+            self.hid_fd = None
+        self.hidraw_path = None
+
+    def _on_hid_readable(self, channel, condition):
+        if condition & (GLib.IOCondition.ERR | GLib.IOCondition.HUP):
+            log('hidraw closed (remote disconnected?)')
+            self.close_hidraw()
+            if self.state != 'idle':
+                self.stop('hidraw lost')
+            return False
+        try:
+            data = os.read(self.hid_fd, 64)
+        except BlockingIOError:
+            return True
+        except OSError as e:
+            log(f'hidraw read error: {e}')
+            self.close_hidraw()
+            return False
+        if len(data) >= 2 and data[0] == KEY_REPORT_ID and data[1] == KEY_VOICECOMMAND:
+            now = time.monotonic()
+            if now - self.last_key >= KEY_DEBOUNCE:
+                self.last_key = now
+                log('mic key pressed')
+                self.toggle()
+        return True
+
+    def send(self, payload, what):
+        if not self.open_hidraw():
+            raise RuntimeError('remote hidraw node unavailable')
+        os.write(self.hid_fd, payload)
+        log(f'sent {what} ({payload.hex()})')
+
+    # ----------------------------------------------------------- audio plumbing
+    def start_feed(self):
+        self.feed = subprocess.Popen(
+            ['pw-cat', '--playback', '--target', '0', '--raw',
+             '--format', 's16', '--rate', str(RATE), '--channels', '1',
+             '--latency', '50ms',
+             '--properties', f'{{ node.name = "{FEED_NODE}" }}', '-'],
+            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL)
+        for _ in range(40):  # up to ~2 s for the node and ports to appear
+            time.sleep(0.05)
+            r = run(['pw-link', f'{FEED_NODE}:output_MONO',
+                     f'{VIRT_SOURCE}:input_MONO'])
+            if r.returncode == 0:
+                log('feed linked into the virtual source')
+                return True
+            if self.feed.poll() is not None:
+                break
+        log('failed to link the feed into the virtual source')
+        self.stop_feed()
+        return False
+
+    def stop_feed(self):
+        if not self.feed:
+            return
+        try:
+            if self.feed.stdin and not self.feed.stdin.closed:
+                self.feed.stdin.close()
+            self.feed.terminate()
+            self.feed.wait(timeout=2)
+        except Exception:
+            try:
+                self.feed.kill()
+            except Exception:
+                pass
+        self.feed = None
+
+    def switch_default_source(self):
+        r = run(['pactl', 'get-default-source'])
+        current = r.stdout.strip()
+        if current and current != VIRT_SOURCE:
+            self.saved_source = current
+        run(['pactl', 'set-default-source', VIRT_SOURCE])
+        log(f'default source -> {VIRT_SOURCE} (was {self.saved_source})')
+
+    def restore_default_source(self):
+        if self.saved_source:
+            run(['pactl', 'set-default-source', self.saved_source])
+            log(f'default source restored -> {self.saved_source}')
+            self.saved_source = None
+
+    # ---------------------------------------------------------------- control
+    def toggle(self):
+        return self.stop('toggle') if self.state != 'idle' else self.start()
+
+    def start(self):
+        if self.state != 'idle':
+            return f'busy ({self.state})'
+        path, err = self.resolve_audio()
+        if err:
+            log(f'start refused: {err}')
+            return f'error: {err}'
+        self.audio_path = path
+        self.frames = 0
+        self.decoder.reset()
+        self.state = 'starting'
+        try:
+            if not self.start_feed():
+                self.state = 'idle'
+                return 'error: audio feed failed'
+            self.call(self.audio_path, CI, 'StartNotify')
+            self.subscribed = True
+            self.send(START_CMD, 'start')
+        except Exception as e:  # noqa: BLE001
+            log(f'start failed: {e}')
+            self.stop('start failure')
+            return f'error: {e}'
+        self.add_timer(int(FIRST_FRAME_TIMEOUT * 1000), self._first_frame_timeout)
+        self.add_timer(MAX_RECORD_SECONDS * 1000, self._max_duration)
+        return 'starting'
+
+    def _first_frame_timeout(self):
+        if self.state == 'starting':
+            log('no audio from the remote; aborting')
+            self.stop('no audio')
+        return False
+
+    def _max_duration(self):
+        if self.state != 'idle':
+            log('maximum duration reached')
+            self.stop('max duration')
+        return False
+
+    def _begin_voxtype(self):
+        self.switch_default_source()
+        subprocess.Popen(['voxtype', 'record', 'start'],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.state = 'recording'
+        log('recording (voxtype started)')
+        self.add_timer(400, self._watch_voxtype)
+
+    def _watch_voxtype(self):
+        """If voxtype stops on its own (cap, cancel), stop the remote too."""
+        if self.state != 'recording':
+            return False
+        try:
+            with open(VOXTYPE_STATE) as fh:
+                state = fh.read().strip()
+        except OSError:
+            return True
+        if state != 'recording':
+            log(f'voxtype left recording ({state}); stopping remote')
+            self.stop('voxtype finished', tell_voxtype=False)
+            return False
+        return True
+
+    def stop(self, reason='stop', tell_voxtype=True):
+        if self.state == 'idle':
+            return 'idle'
+        was = self.state
+        self.state = 'stopping'
+        self.clear_timers()
+        log(f'stopping ({reason})')
+        if was == 'recording' and tell_voxtype:
+            subprocess.Popen(['voxtype', 'record', 'stop'],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            self.send(STOP_CMD, 'stop')
+        except Exception as e:  # noqa: BLE001
+            log(f'WARNING: could not confirm mic stop: {e}')
+        if self.subscribed and self.audio_path:
+            try:
+                self.call(self.audio_path, CI, 'StopNotify')
+            except GLib.Error:
+                pass
+        self.subscribed = False
+        # Give voxtype a moment to drain the tail of the stream before the
+        # feed and the default source disappear underneath it.
+        GLib.timeout_add(600, self._finish_stop)
+        return 'stopping'
+
+    def _finish_stop(self):
+        self.stop_feed()
+        self.restore_default_source()
+        self.state = 'idle'
+        log(f'idle (decoded {self.frames} frames)')
+        return False
+
+    # ----------------------------------------------------------------- signals
+    def _on_props(self, _c, _s, path, _i, _n, params, _u):
+        iface, props, _inv = params.unpack()
+        if path == DEV_PATH and iface == 'org.bluez.Device1':
+            if props.get('Connected') is False and self.state != 'idle':
+                log('remote disconnected mid-recording')
+                self.stop('disconnected')
+            return
+        if iface != CI or path != self.audio_path or 'Value' not in props:
+            return
+        if self.state not in ('starting', 'recording'):
+            return
+        value = bytes(props['Value'])
+        if len(value) == 1:
+            if value[0] != 0x04:
+                self.decoder.reset()
+            return
+        pcm = self.decoder.feed(value)
+        if pcm is None:
+            return
+        self.frames += 1
+        if self.state == 'starting':
+            self.clear_timers()
+            self.add_timer(MAX_RECORD_SECONDS * 1000, self._max_duration)
+            self._begin_voxtype()
+        if self.feed and self.feed.stdin:
+            try:
+                self.feed.stdin.write(pcm.tobytes())
+                self.feed.stdin.flush()
+            except (BrokenPipeError, ValueError):
+                log('audio feed closed unexpectedly')
+                self.stop('feed lost')
+
+    # ------------------------------------------------------------------ socket
+    def serve(self):
+        if os.path.exists(SOCKET_PATH):
+            os.unlink(SOCKET_PATH)
+        srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        srv.bind(SOCKET_PATH)
+        srv.listen(4)
+        os.chmod(SOCKET_PATH, 0o600)
+
+        def accept_loop():
+            while True:
+                try:
+                    conn, _ = srv.accept()
+                except OSError:
+                    return
+                with conn:
+                    try:
+                        cmd = conn.recv(64).decode().strip()
+                    except OSError:
+                        continue
+                    result = {}
+                    done = threading.Event()
+
+                    def apply():
+                        try:
+                            if cmd == 'toggle':
+                                result['r'] = self.toggle()
+                            elif cmd == 'start':
+                                result['r'] = self.start()
+                            elif cmd == 'stop':
+                                result['r'] = self.stop('client request')
+                            elif cmd == 'status':
+                                result['r'] = self.state
+                            else:
+                                result['r'] = f'unknown command: {cmd}'
+                        except Exception as e:  # noqa: BLE001
+                            result['r'] = f'error: {e}'
+                        done.set()
+                        return False
+
+                    GLib.idle_add(apply)
+                    done.wait(timeout=10)
+                    try:
+                        conn.sendall((result.get('r', 'timeout') + '\n').encode())
+                    except OSError:
+                        pass
+
+        threading.Thread(target=accept_loop, daemon=True).start()
+        log(f'listening on {SOCKET_PATH}')
+
+    def shutdown(self):
+        if self.state != 'idle':
+            self.stop('shutdown')
+            self._finish_stop()
+        self.close_hidraw()
+        self.loop.quit()
+        return False
+
+
+def main():
+    bridge = Bridge()
+    if not bridge.open_hidraw():
+        log('remote hidraw not available yet; will retry when it appears')
+    GLib.timeout_add_seconds(5, lambda: (bridge.open_hidraw(), True)[1])
+    bridge.serve()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        GLib.unix_signal_add(GLib.PRIORITY_HIGH, sig, bridge.shutdown)
+    log('ready')
+    try:
+        bridge.loop.run()
+    finally:
+        if bridge.state != 'idle':
+            try:
+                bridge.send(STOP_CMD, 'final stop')
+            except Exception:
+                pass
+        bridge.restore_default_source()
+        bridge.stop_feed()
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

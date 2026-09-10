@@ -36,6 +36,7 @@ Pour ajouter/retirer un fichier suivi : éditer `MANIFEST` (chemins relatifs à 
 | `sync.sh` / `restore.sh` | backup / restauration |
 | `STATE` | version Omarchy + date du dernier sync |
 | `external-plugins.txt` | plugins shell clonés depuis GitHub (`id<TAB>url`) |
+| `packages.txt` | `pacman -Qqe` au dernier sync — **référence seule**, `restore.sh` n'installe rien |
 
 ---
 
@@ -139,13 +140,49 @@ Vérifier que `~/.local/bin` est dans le `PATH` et que les fichiers sont `+x`.
 | `.config/omarchy/hooks/post-update.d/setup-agent.hook` | invite de choix d'agent |
 | `.config/omarchy/notes/` | notes perso (jellyfin/media worker) |
 
+## 8. Environnement shell — `~/.bashrc`, `~/.bash_profile`, `~/.XCompose`
+
+Ces trois fichiers sont à la **racine de `$HOME`**, pas dans `.config`.
+
+- **`~/.bashrc`** : défaut Omarchy + conda (miniforge), PATH grok, PATH LM Studio,
+  `direnv hook bash`, `alias v.='source .venv/bin/activate'`.
+  Le no-op **`__conda_hashr() { :; }`** doit rester **sous** le bloc conda
+  (`conda init` le réécrit) : les défauts Omarchy font `set +h` pour mise, donc
+  le `hash -r` de conda ne ferait qu'afficher « hashing disabled » à chaque activate.
+- **`~/.bash_profile`** : source `.bashrc` + PATH LM Studio.
+- **`~/.XCompose`** : règles de composition maison, entièrement réécrit vs le
+  défaut Omarchy (emoji stock retirés). Appliquer : `omarchy restart xcompose`.
+
+## 9. Scripts maison liés aux binds
+
+| Script | Bind | Dépendances |
+|---|---|---|
+| `.local/bin/omarchy-shazam` | `SUPER + code:38` | paquet `songrec` |
+| `.local/bin/bbox-mic` | `SUPER + ALT + X` | `bbox-mic-bridge` + son service |
+| `.local/bin/bbox-mic-bridge` | — | python3, PipeWire, Bluetooth ; doc dans `~/Documents/bbox_remote/mic_info.md` |
+
+`bbox-mic` n'est qu'un client : sans le service actif il s'arrête avec un message.
+Après restauration :
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now bbox-mic-bridge
+```
+
 ## Non sauvegardé volontairement
 
 - `~/.config/nvim` → symlink vers `MaConfig/macos/nvim`, déjà versionné.
 - Binaires (`librepods`, `librepods-ctl`) et wrappers d'agents dans `~/.local/bin` :
   réinstallés par leurs outils respectifs.
 - Thèmes : aucun thème custom dans `~/.config/omarchy/themes/`.
-- `~/.config/omarchy/branding/` : identique au stock.
+- `~/.config/omarchy/branding/` (`about.txt`, `screensaver.txt`) : supposé stock,
+  mais **non vérifiable sur 4.0.3** — plus aucun équivalent dans
+  `/usr/share/omarchy`. À ajouter au MANIFEST si l'ASCII art compte.
+- Services systemd user `livecaption`, `livecaption-overlay`,
+  `claude-token-refresh` et leurs scripts (`livecaption`, `hermes`, `muse`) :
+  non suivis, pas liés à un keybind Hyprland.
+- `~/.config/mise/config.toml` (versions d'outils) et
+  `~/.config/opencode/opencode.json` : non suivis.
 - L'ancien dossier `../omarchy/` du repo date d'Omarchy 2.x (waybar, walker,
   fichiers `.conf`) — **obsolète**, ne pas restaurer sur Quattro.
 
@@ -156,6 +193,8 @@ hyprctl configerrors                      # doit être vide
 hyprctl getoption input:kb_layout         # frmac,qwertyansi
 xkbcli compile-keymap --layout frmac,qwertyansi --variant ansi,ansi \
     --options caps:escape_shifted_capslock,altwin:swap_lalt_lwin >/dev/null && echo "xkb OK"
-ls -l ~/.local/bin/{kb-layout-toggle,hypr-window-full-width,hypr-scrolling-center-column}
+ls -l ~/.local/bin/{kb-layout-toggle,hypr-window-full-width,omarchy-shazam,bbox-mic,bbox-mic-bridge}
+systemctl --user is-enabled bbox-mic-bridge   # enabled
 omarchy restart shell
+omarchy restart xcompose
 ```

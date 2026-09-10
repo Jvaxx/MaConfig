@@ -1,0 +1,63 @@
+#!/bin/bash
+# Identify the song currently playing through the speakers (Shazam, via songrec).
+#
+# Records a few seconds from the monitor source of the DEFAULT SINK -- i.e. what
+# you are actually hearing, not the microphone -- and asks Shazam's servers what
+# it is. The result is shown as a notification and copied to the clipboard.
+#
+# Bound to SUPER + code:38 in ~/.config/hypr/bindings.lua.
+
+set -uo pipefail
+
+DURATION="${1:-8}"
+WAV="$(mktemp -t shazam-XXXXXX.wav)"
+COVER="$(mktemp -t shazam-cover-XXXXXX)"
+trap 'rm -f "$WAV" "$COVER"' EXIT
+
+notify() { notify-send -a "Shazam" -h string:x-canonical-private-synchronous:shazam "$@"; }
+
+sink="$(pactl get-default-sink 2>/dev/null)"
+if [[ -z "$sink" ]]; then
+  notify -u critical "Shazam" "No default audio output found."
+  exit 1
+fi
+
+notify -t "$((DURATION * 1000))" "Listening…" "Identifying the song playing on $(pactl list short sinks | awk -v s="$sink" '$2==s {print $2}' | head -1)"
+
+# stream.capture.sink=true makes this a monitor (loopback) capture of the sink.
+timeout "$((DURATION + 4))" pw-record \
+  --target "${sink}.monitor" \
+  -P '{ stream.capture.sink = true }' \
+  --rate 16000 --channels 1 --format s16 \
+  "$WAV" &
+rec_pid=$!
+sleep "$DURATION"
+kill -INT "$rec_pid" 2>/dev/null
+wait "$rec_pid" 2>/dev/null
+
+if [[ ! -s "$WAV" ]]; then
+  notify -u critical "Shazam" "Could not capture any audio from ${sink}."
+  exit 1
+fi
+
+json="$(songrec audio-file-to-recognized-song "$WAV" 2>/dev/null)"
+title="$(jq -r '.track.title // empty' <<<"$json")"
+artist="$(jq -r '.track.subtitle // empty' <<<"$json")"
+
+if [[ -z "$title" ]]; then
+  notify "No match" "Shazam did not recognize that. Try again with more audio: omarchy-shazam 15"
+  exit 1
+fi
+
+url="$(jq -r '.track.url // empty' <<<"$json")"
+art="$(jq -r '.track.images.coverart // empty' <<<"$json")"
+
+printf '%s' "$artist - $title" | wl-copy
+
+icon="audio-x-generic"
+if [[ -n "$art" ]] && curl -fsL --max-time 5 -o "$COVER" "$art"; then
+  icon="$COVER"
+fi
+
+notify -t 12000 -i "$icon" "$title" "$artist${url:+
+$url}"

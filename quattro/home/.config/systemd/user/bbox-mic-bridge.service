@@ -1,0 +1,16 @@
+[Unit]
+Description=Bbox remote microphone bridge (BLE mic -> PipeWire virtual source -> voxtype)
+Documentation=file:%h/Documents/bbox_remote/mic_info.md
+After=pipewire.service wireplumber.service bluetooth.target
+Wants=pipewire.service wireplumber.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/bbox-mic-bridge
+Restart=on-failure
+RestartSec=3
+# The bridge sends the microphone stop command on SIGTERM; give it time.
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

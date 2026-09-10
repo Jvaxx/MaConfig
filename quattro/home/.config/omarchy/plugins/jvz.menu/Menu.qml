@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import qs.Commons
 import qs.Ui
+import qs.services
 import "MenuModel.js" as MenuModel
 
 Item {
@@ -75,9 +76,10 @@ Item {
   property var providerQueue: []
   property int providerRevision: 0
 
-  // Shared application engine (entries, hidden filters, icons, launch,
-  // removal), owned by the shell and also used by the standalone launcher.
-  readonly property var appLibrary: root.shell ? root.shell.appLibrary : null
+  // Own the standard application library until the host handles Qt list
+  // manifests correctly: its Array.isArray(kinds) check can revoke a cloned
+  // menu's shell API. Keep filtering, icons and launching in the stock engine.
+  readonly property AppLibrary appLibrary: AppLibrary { omarchyPath: root.omarchyPath }
   property bool deleteConfirmOpen: false
   property var deleteTarget: null
   onOpenedChanged: if (!opened) { deleteConfirmOpen = false; deleteTarget = null }

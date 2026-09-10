@@ -131,3 +131,36 @@ hl.unbind("SUPER + ALT + Home") -- was: Save window width
 hl.unbind("SUPER + Home") -- was: Restore window width
 o.bind("SUPER + ALT + D", "Save window width", "omarchy-hyprland-window-width save")
 o.bind("SUPER + D", "Restore window width", "omarchy-hyprland-window-width restore")
+
+-- --- Shazam: identify the song playing on the speakers ----------------------
+-- ~/.local/bin/omarchy-shazam records ~8s from the monitor source of the
+-- default sink (what you hear, not the mic) and asks Shazam's servers, via
+-- songrec. Result lands in a notification and on the clipboard.
+--
+-- code:38 is <AC01>: the key labelled A on the board, which fr(mac) types as
+-- "q" -- "q" as in the Shazam key. Bound by keycode so it stays on the same
+-- physical key in qwerty mode (where a keysym bind would jump elsewhere).
+-- Plain SUPER on that key was free in stock Omarchy; SUPER+CTRL+Q keeps its
+-- default meaning.
+o.bind("SUPER + code:38", "Identify song playing (Shazam)", "omarchy-shazam")
+
+-- --- Dictation through the Bbox remote's own microphone ---------------------
+-- Stock voxtype dictates from the PC mic on F9 (push-to-talk) and SUPER+CTRL+X
+-- (toggle); both are untouched. This is the same toggle, but recording from the
+-- microphone inside the Bouygues Bbox remote over Bluetooth LE.
+--
+-- bbox-mic talks to the bbox-mic-bridge user service, which sends the vendor
+-- start/stop HID reports to the remote, decodes its IMA-ADPCM stream into the
+-- "bbox_remote_mic" PipeWire virtual source, points the default source at it
+-- and then drives `voxtype record`. The default source is restored on stop, so
+-- F9 and SUPER+CTRL+X keep using the PC microphone as before.
+--
+-- The remote's own mic key already toggles this directly (the bridge reads it
+-- from hidraw); this bind is the keyboard equivalent. It cannot be bound as a
+-- keysym anyway: the key reports evdev 582 (KEY_VOICECOMMAND), past the 255
+-- keycode ceiling xkb can represent.
+--
+-- SUPER+ALT+X was free; it sits next to stock SUPER+CTRL+X. x is <AB02> in both
+-- frmac and qwertyansi, so a plain keysym bind survives the layout toggle.
+-- See ~/Documents/bbox_remote/mic_info.md
+o.bind("SUPER + ALT + X", "Toggle dictation (Bbox remote mic)", "bbox-mic toggle")

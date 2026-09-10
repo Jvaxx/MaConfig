@@ -17,6 +17,15 @@
 # --- Scripts appelés par les keybindings (sans eux, les binds sont morts) ---
 .local/bin/kb-layout-toggle
 .local/bin/hypr-window-full-width
+# SUPER + code:38 — Shazam (nécessite le paquet songrec)
+.local/bin/omarchy-shazam
+# SUPER + ALT + X — dictée via le micro de la télécommande Bbox.
+# bbox-mic est un simple client : il parle au service bbox-mic-bridge, donc les
+# trois entrées ci-dessous sont indissociables. Après restauration :
+#   systemctl --user daemon-reload && systemctl --user enable --now bbox-mic-bridge
+.local/bin/bbox-mic
+.local/bin/bbox-mic-bridge
+.config/systemd/user/bbox-mic-bridge.service
 
 # --- Omarchy shell ---
 .config/omarchy/shell.json
@@ -54,6 +63,18 @@
 # --- Terminaux (modifiés vs défauts) ---
 .config/foot/foot.ini
 .config/kitty/kitty.conf
+
+# --- Environnement shell (à la racine de $HOME, pas dans .config) ---
+# Par-dessus les défauts Omarchy : conda (+ le no-op __conda_hashr qui neutralise
+# son `hash -r`, inutile puisque les défauts Omarchy font `set +h` pour mise),
+# PATH grok, PATH LM Studio, hook direnv, alias v.
+.bashrc
+.bash_profile
+
+# --- Règles de composition clavier custom (~/.XCompose) ---
+# Entièrement réécrit vs le défaut Omarchy. Appliquer avec :
+#   omarchy restart xcompose
+.XCompose
 
 # --- Outils CLI (modifiés vs défauts) ---
 .config/btop/btop.conf
