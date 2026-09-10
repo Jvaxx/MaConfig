@@ -1,207 +1,218 @@
 #!/usr/bin/env bash
-# Installation des paquets sur Fedora Asahi Remix (aarch64, KDE Plasma).
-# Usage: ./bootstrap.sh [--dry-run] [--tier N]... [--no-copr] [--skip-manual]
-#
-# Idempotent : relancer ne casse rien. Chaque paquet est tenté séparément, donc
-# un nom absent des dépôts ne fait pas échouer tout le lot — il est signalé en
-# fin de course. C'est voulu : les dépôts aarch64 d'Asahi suivent Fedora mais on
-# ne veut pas d'un `dnf install` monolithique qui abandonne au premier manquant.
-set -uo pipefail
+# Fedora Asahi Remix 44+ / aarch64. Installe les outils, jamais les dotfiles.
+# Voir RESTORE.md pour les tiers, les sources et les limites du mode simulation.
+set -euo pipefail
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PKGFILE="$HERE/packages.dnf"
-
-DRY=0; NO_COPR=0; SKIP_MANUAL=0; TIERS=""
-while [[ $# -gt 0 ]]; do
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DRY=0; NO_COPR=0; SKIP_MANUAL=0
+TIERS=(); FAILED=(); SKIPPED=()
+usage() {
+  echo "Usage: $0 [--dry-run] [--tier 1|2|3|4]... [--no-copr] [--skip-manual]"
+}
+while (( $# )); do
   case "$1" in
-    --dry-run)      DRY=1 ;;
-    --no-copr)      NO_COPR=1 ;;
-    --skip-manual)  SKIP_MANUAL=1 ;;
-    --tier)         TIERS="$TIERS $2"; shift ;;
-    *) echo "option inconnue: $1"; exit 1 ;;
+    --dry-run) DRY=1 ;;
+    --no-copr) NO_COPR=1 ;;
+    --skip-manual) SKIP_MANUAL=1 ;;
+    --tier)
+      [[ ${2:-} =~ ^[1-4]$ ]] || { usage >&2; exit 2; }
+      TIERS+=("$2"); shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) echo "Option inconnue: $1" >&2; usage >&2; exit 2 ;;
   esac
   shift
 done
-
-[[ -f $PKGFILE ]] || { echo "packages.dnf introuvable"; exit 1; }
-
-FAILED=()
-run() { if (( DRY )); then echo "  [dry] $*"; else "$@"; fi; }
-
-say() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
-warn() { printf '\033[1;33m  !! %s\033[0m\n' "$*"; }
-
-# ---------------------------------------------------------------------
-# 0. Garde-fous
-# ---------------------------------------------------------------------
-if [[ $(uname -m) != aarch64 ]]; then
-  warn "architecture $(uname -m), ce script cible aarch64 (Asahi). On continue quand même."
-fi
-# En --dry-run on n'exige pas dnf : ça permet de relire le plan d'installation
-# depuis la machine Arch, là où ce fichier est édité.
-if ! command -v dnf >/dev/null; then
-  if (( DRY )); then
-    warn "dnf absent — simulation seulement."
-  else
-    echo "dnf introuvable — ce script est pour Fedora."; exit 1
-  fi
-fi
-
-# ---------------------------------------------------------------------
-# 1. Paquets dnf, section par section
-# ---------------------------------------------------------------------
-current_mode=""; current_arg=""; current_tier=0
-batch=()
-
 want_tier() {
-  [[ -z ${TIERS// /} ]] && return 0
-  [[ " $TIERS " == *" $current_tier "* ]]
+  local tier
+  (( ${#TIERS[@]} )) || return 0
+  for tier in "${TIERS[@]}"; do [[ $tier == "$1" ]] && return 0; done
+  return 1
+}
+say() { printf '\n==> %s\n' "$*"; }
+fail() { printf 'ERREUR: %s\n' "$*" >&2; FAILED+=("$*"); }
+run() {
+  printf '  '; printf '%q ' "$@"; printf '\n'
+  (( DRY )) || "$@"
+}
+attempt() {
+  local label=$1; shift
+  if ! run "$@"; then fail "$label"; fi
 }
 
-flush() {
-  (( ${#batch[@]} )) || return 0
-  if ! want_tier; then batch=(); return 0; fi
-
-  if [[ $current_mode == copr ]]; then
-    if (( NO_COPR )); then
-      warn "COPR $current_arg ignoré (--no-copr) : ${batch[*]}"
-      batch=(); return 0
-    fi
-    say "COPR $current_arg"
-    run sudo dnf -y copr enable "$current_arg" || warn "copr enable $current_arg a échoué"
-  fi
-
-  for p in "${batch[@]}"; do
-    if command -v rpm >/dev/null 2>&1 && rpm -q "$p" >/dev/null 2>&1; then
-      echo "  déjà là   $p"
-      continue
-    fi
-    echo "  install   $p"
-    if ! run sudo dnf -y install "$p" >/dev/null 2>&1; then
-      warn "échec: $p"
-      FAILED+=("$p")
-    fi
+# A dry-run is portable and performs no RPM/Flatpak queries, downloads or writes.
+# A real install must be run as the target user, not via sudo ./bootstrap.sh.
+ID=; ID_LIKE=; VERSION_ID=
+# shellcheck disable=SC1091
+[[ ! -r /etc/os-release ]] || source /etc/os-release
+if (( ! DRY )); then
+  [[ $EUID -ne 0 ]] || { echo "Lancer sans sudo (sudo est utilisé seulement pour dnf)." >&2; exit 1; }
+  [[ $(uname -m) == aarch64 ]] || { echo "Architecture requise: aarch64." >&2; exit 1; }
+  [[ $ID == fedora || $ID == fedora-asahi-remix || " $ID_LIKE " == *" fedora "* ]] \
+    || { echo "Distribution Fedora requise." >&2; exit 1; }
+  [[ $VERSION_ID =~ ^[0-9]+$ && $VERSION_ID -ge 44 ]] \
+    || { echo "Ce bootstrap cible Fedora 44+ (Neovim >= 0.12)." >&2; exit 1; }
+  for cmd in dnf sudo python3; do
+    command -v "$cmd" >/dev/null || { echo "Prérequis absent: $cmd" >&2; exit 1; }
   done
-  batch=()
-}
+fi
 
-while IFS= read -r line; do
-  case "$line" in
-    *"TIER 1"*) flush; current_tier=1; say "TIER 1 — shell & CLI core"; continue ;;
-    *"TIER 2"*) flush; current_tier=2; say "TIER 2 — toolchains de dev";  continue ;;
-    *"TIER 3"*) flush; current_tier=3; say "TIER 3 — terminal, polices, saisie"; continue ;;
-    *"TIER 4"*) flush; current_tier=4; say "TIER 4 — GUI sans GPU";       continue ;;
-  esac
+# Keep locally installed tools visible during this run, before restoring bashrc.
+export PATH="$HOME/.local/bin:${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
+# Make the chroot explicit: derivatives may identify as fedora-asahi-remix.
+FEDORA_VERSION=44
+if [[ $VERSION_ID =~ ^[0-9]+$ ]] && [[ $ID == fedora || $ID == fedora-asahi-remix || " $ID_LIKE " == *" fedora "* ]]; then
+  FEDORA_VERSION=$VERSION_ID
+fi
+CHROOT="fedora-$FEDORA_VERSION-aarch64"
 
+# Parse and validate the WHOLE package file before executing any command.
+# Headers are explicit (#@tier), not inferred from prose comments.
+PKGS=(); MODES=(); REPOS=(); PKG_TIERS=()
+tier=; mode=; repo=
+while IFS= read -r line || [[ -n $line ]]; do
+  line="${line%$'\r'}"
   if [[ $line == '#@'* ]]; then
-    flush
-    read -r tag arg <<<"${line#\#@}"
-    current_mode="$tag"; current_arg="${arg:-}"
+    read -r tag arg extra <<<"${line#\#@}"
+    case "$tag" in
+      tier)
+        [[ ${arg:-} =~ ^[1-4]$ && -z ${extra:-} ]] || { echo "Tier invalide: $line" >&2; exit 2; }
+        tier=$arg; mode=; repo= ;;
+      repo)
+        [[ -n $tier && -z ${arg:-} ]] || { echo "Section invalide: $line" >&2; exit 2; }
+        mode=repo; repo= ;;
+      copr)
+        [[ -n $tier && ${arg:-} =~ ^[a-zA-Z0-9_@.-]+/[a-zA-Z0-9_.:-]+$ && -z ${extra:-} ]] \
+          || { echo "COPR invalide: $line" >&2; exit 2; }
+        mode=copr; repo=$arg ;;
+      *) echo "Directive inconnue: $line" >&2; exit 2 ;;
+    esac
     continue
   fi
+  line="${line%%#*}"
+  # Trim whitespace without word splitting, xargs, or interpreting quotes.
+  line="${line#"${line%%[![:space:]]*}"}"
+  line="${line%"${line##*[![:space:]]}"}"
+  [[ -n $line ]] || continue
+  [[ -n $mode && $line =~ ^[a-zA-Z0-9][a-zA-Z0-9+_.-]*$ ]] \
+    || { echo "Paquet/section invalide: $line" >&2; exit 2; }
+  PKGS+=("$line"); MODES+=("$mode"); REPOS+=("$repo"); PKG_TIERS+=("$tier")
+done < "$HERE/packages.dnf"
 
-  line="${line%%#*}"; line="${line// /}"
-  [[ -z $line ]] && continue
-  [[ $current_mode == manual ]] && continue
-  batch+=("$line")
-done < "$PKGFILE"
-flush
-
-# ---------------------------------------------------------------------
-# 2. Neovim >= 0.12 (tarball officielle aarch64)
-# ---------------------------------------------------------------------
-# Indispensable : init.lua appelle vim.pack.add(), introduit en 0.12, alors que
-# Fedora 43 ne fournit que 0.11.x. On installe hors dnf pour ne pas se battre
-# avec le paquet distribution.
-install_nvim() {
-  local want="${NVIM_VERSION:-stable}"
-  local prefix="$HOME/.local/nvim"
-  local url="https://github.com/neovim/neovim/releases/download/${want}/nvim-linux-arm64.tar.gz"
-
-  if command -v nvim >/dev/null 2>&1; then
-    local have; have="$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+')"
-    if [[ -n $have ]] && awk -v v="$have" 'BEGIN{exit !(v+0 >= 0.12)}'; then
-      echo "  nvim $have déjà >= 0.12, rien à faire"
-      return 0
+say "Paquets Fedora (les erreurs restent visibles)"
+declare -A COPR_STATUS=()
+for i in "${!PKGS[@]}"; do
+  want_tier "${PKG_TIERS[i]}" || continue
+  p=${PKGS[i]}; repo=${REPOS[i]}
+  if [[ ${MODES[i]} == copr ]]; then
+    if (( NO_COPR )); then SKIPPED+=("$p (--no-copr)"); continue; fi
+    if [[ ! -v COPR_STATUS[$repo] ]]; then
+      if run sudo dnf -y copr enable "$repo" "$CHROOT"; then
+        COPR_STATUS[$repo]=ok
+      else
+        COPR_STATUS[$repo]=failed
+        fail "activation COPR $repo"
+      fi
+    fi
+    if [[ ${COPR_STATUS[$repo]} != ok ]]; then
+      fail "$p (COPR indisponible)"; continue
     fi
   fi
+  attempt "dnf install $p" sudo dnf -y install "$p"
+done
 
-  say "Neovim $want (tarball aarch64) -> $prefix"
-  (( DRY )) && { echo "  [dry] curl $url"; return 0; }
-
-  local tmp; tmp="$(mktemp -d)"
-  if ! curl -fsSL "$url" -o "$tmp/nvim.tar.gz"; then
-    warn "téléchargement de $url impossible"; rm -rf "$tmp"; FAILED+=("neovim"); return 1
-  fi
-  tar -xzf "$tmp/nvim.tar.gz" -C "$tmp"
-  rm -rf "$prefix"
-  mkdir -p "$(dirname "$prefix")"
-  mv "$tmp"/nvim-linux-arm64 "$prefix"
-  rm -rf "$tmp"
-
-  mkdir -p "$HOME/.local/bin"
-  ln -sfn "$prefix/bin/nvim" "$HOME/.local/bin/nvim"
-  echo "  $("$prefix/bin/nvim" --version | head -1)"
+# Compare major/minor components, not floating point (0.9 is older than 0.12).
+version_at_least() {
+  local text=$1 major=$2 minor=$3 patch=${4:-0}
+  [[ $text =~ ([0-9]+)\.([0-9]+)\.([0-9]+) ]] || return 1
+  local have_major=$((10#${BASH_REMATCH[1]})) have_minor=$((10#${BASH_REMATCH[2]})) have_patch=$((10#${BASH_REMATCH[3]}))
+  (( have_major > major || (have_major == major && have_minor > minor) ||
+     (have_major == major && have_minor == minor && have_patch >= patch) ))
 }
-install_nvim
-
-# ---------------------------------------------------------------------
-# 3. Outils hors dépôts
-# ---------------------------------------------------------------------
-if (( ! SKIP_MANUAL )); then
-  say "Outils hors dépôts"
-
-  if ! command -v mise >/dev/null 2>&1; then
-    echo "  mise"
-    run bash -c 'curl -fsSL https://mise.run | sh' || FAILED+=("mise")
+if want_tier 1 && (( ! DRY )); then
+  nvim_version="$(nvim --version 2>/dev/null || true)"
+  if ! version_at_least "$nvim_version" 0 12; then
+    # dnf install need not upgrade an already installed older RPM.
+    attempt "mise à jour du RPM Neovim" sudo dnf -y upgrade neovim
+    nvim_version="$(nvim --version 2>/dev/null || true)"
+    if ! version_at_least "$nvim_version" 0 12; then
+      fail "nvim >= 0.12 requis; vérifier PATH/type -a nvim (aucun ancien binaire supprimé)"
+    fi
   fi
-
-  if ! command -v uv >/dev/null 2>&1; then
-    echo "  uv"
-    run bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || FAILED+=("uv")
-  fi
-
-  # Les trois suivants n'existent ni en RPM ni en COPR fiable pour aarch64.
-  if command -v cargo >/dev/null 2>&1; then
-    for c in dua-cli diskonaut tree-sitter-cli; do
-      command -v "${c%-cli}" >/dev/null 2>&1 && continue
-      echo "  cargo install $c"
-      run cargo install "$c" || FAILED+=("$c")
-    done
-  else
-    warn "cargo absent : dua-cli / diskonaut / tree-sitter-cli non installés"
-  fi
-
-  if command -v go >/dev/null 2>&1 && ! command -v lazydocker >/dev/null 2>&1; then
-    echo "  lazydocker"
-    run go install github.com/jesseduffield/lazydocker@latest || FAILED+=("lazydocker")
-  fi
-
-  if command -v flatpak >/dev/null 2>&1; then
-    run flatpak remote-add --if-not-exists --user flathub \
-      https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
-    for app in org.localsend.localsend_app md.obsidian.Obsidian org.signal.Signal; do
-      flatpak info "$app" >/dev/null 2>&1 && { echo "  déjà là   $app"; continue; }
-      echo "  flatpak   $app"
-      run flatpak install -y --user flathub "$app" >/dev/null 2>&1 \
-        || warn "$app indisponible en aarch64 (attendu pour certains)"
-    done
-  else
-    warn "flatpak absent : localsend / obsidian / signal non installés"
+fi
+if want_tier 2 && (( ! DRY )); then
+  ts_version="$(tree-sitter --version 2>/dev/null || true)"
+  if ! version_at_least "$ts_version" 0 26 1; then
+    fail "tree-sitter-cli >= 0.26.1 requis; vérifier le RPM et le PATH"
   fi
 fi
 
-# ---------------------------------------------------------------------
-# 4. Bilan
-# ---------------------------------------------------------------------
-say "Bilan"
-if (( ${#FAILED[@]} )); then
-  echo "  Non installés (${#FAILED[@]}) :"
-  printf '    - %s\n' "${FAILED[@]}"
-  echo
-  echo "  Vérifie avec: dnf search <nom>   /   https://packages.fedoraproject.org"
+# No curl | sh. Binary/font assets are pinned and SHA-256 checked by this helper.
+asset() {
+  local name=$1 binary=${2:-}
+  if (( ! DRY )) && [[ -n $binary ]] && command -v "$binary" >/dev/null; then
+    echo "  déjà disponible: $binary ($(command -v "$binary"))"
+    return
+  fi
+  attempt "asset $name" python3 -B "$HERE/lib/install_asset.py" "$name"
+}
+if (( SKIP_MANUAL )); then
+  SKIPPED+=("outils hors dépôts et polices Nerd Font (--skip-manual)")
 else
-  echo "  Tout est passé."
+  if want_tier 1; then
+    say "CLI hors dépôts (versions vérifiées dans assets.json)"
+    asset lazygit lazygit
+  fi
+  if want_tier 2; then
+    say "Outils de développement hors dépôts"
+    asset mise mise
+    asset uv uv
+    asset lazydocker lazydocker
+    # Build on this architecture. Install only if missing; no implicit upgrades.
+    for spec in dua-cli:2.44.0:dua diskonaut:0.11.0:diskonaut; do
+      IFS=: read -r crate version binary <<<"$spec"
+      if (( ! DRY )) && command -v "$binary" >/dev/null; then
+        echo "  déjà disponible: $binary"; continue
+      fi
+      if (( DRY )) || command -v cargo >/dev/null; then
+        attempt "cargo $crate" cargo install --locked --version "$version" "$crate"
+      else
+        fail "$crate (cargo absent)"
+      fi
+    done
+  fi
+  if want_tier 3; then
+    say "Police Nerd Font utilisateur"
+    asset jetbrains-mono
+  fi
+  if want_tier 4; then
+    say "Flatpaks utilisateur (disponibilité ARM64 vérifiée par Flatpak)"
+    if (( DRY )) || command -v flatpak >/dev/null; then
+      if run flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
+        for app in org.localsend.localsend_app md.obsidian.Obsidian org.signal.Signal; do
+          if (( ! DRY )) && flatpak info --user --arch=aarch64 "$app" >/dev/null 2>&1; then
+            echo "  déjà installé (utilisateur): $app"; continue
+          fi
+          attempt "flatpak $app" flatpak install -y --user --arch=aarch64 flathub "$app"
+        done
+      else
+        fail "ajout de Flathub utilisateur"
+      fi
+    else
+      fail "flatpak absent"
+    fi
+  fi
 fi
-echo
-echo "  Suite : ./restore.sh   puis   RESTORE.md pour les étapes manuelles (XKB/Plasma)."
+
+say "Bilan"
+if (( ${#SKIPPED[@]} )); then printf '  Ignoré volontairement: %s\n' "${SKIPPED[@]}"; fi
+if (( ${#FAILED[@]} )); then
+  printf '  ÉCHEC: %s\n' "${FAILED[@]}"
+  echo "Installation incomplète. Corriger les erreurs ci-dessus puis relancer." >&2
+  exit 1
+fi
+if (( DRY )); then
+  echo "Simulation seulement: aucun paquet, téléchargement ou fichier modifié."
+else
+  echo "Toutes les opérations sélectionnées ont réussi."
+fi
+echo "Suite: ./restore.sh --dry-run puis RESTORE.md (NVM, Plasma, Podman)."

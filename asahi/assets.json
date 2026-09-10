@@ -1,0 +1,32 @@
+{
+  "lazygit": {
+    "version": "0.65.0",
+    "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.65.0/lazygit_0.65.0_linux_arm64.tar.gz",
+    "sha256": "d954a09c128bd37b2bd0d254308474e87de3729cfe0e37f5b46a49357a4fe257",
+    "binaries": {"lazygit": "lazygit"}
+  },
+  "lazydocker": {
+    "version": "0.25.2",
+    "url": "https://github.com/jesseduffield/lazydocker/releases/download/v0.25.2/lazydocker_0.25.2_Linux_arm64.tar.gz",
+    "sha256": "005c38b685aaa557e7d646d83a3dadb5024340eeed8c6a2e1949eee6f530de23",
+    "binaries": {"lazydocker": "lazydocker"}
+  },
+  "mise": {
+    "version": "2026.9.4",
+    "url": "https://github.com/jdx/mise/releases/download/v2026.9.4/mise-v2026.9.4-linux-arm64.tar.gz",
+    "sha256": "18303fdb59095acf0c50b0d23819b87182516988f9eb2ec016b52f8814916904",
+    "binaries": {"mise/bin/mise": "mise"}
+  },
+  "uv": {
+    "version": "0.12.12",
+    "url": "https://github.com/astral-sh/uv/releases/download/0.12.12/uv-aarch64-unknown-linux-gnu.tar.gz",
+    "sha256": "fe08db50cc1b56cd1da7801065ed1103d27ed3f9571cd122386cfc7faf1b8df5",
+    "binaries": {"uv-aarch64-unknown-linux-gnu/uv": "uv", "uv-aarch64-unknown-linux-gnu/uvx": "uvx"}
+  },
+  "jetbrains-mono": {
+    "version": "3.5.1",
+    "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/JetBrainsMono.tar.xz",
+    "sha256": "04d5e8f903693f9dd13e16f867e994834e681eb3c72c0d337a770dcda09010cf",
+    "fonts": "JetBrainsMonoNerd"
+  }
+}

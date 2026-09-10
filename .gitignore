@@ -1,0 +1,11 @@
+# Local safety copies and interrupted staging (never config sources).
+*.bak.*
+.maconfig-stage-*/
+/asahi/.operation.lock
+__pycache__/
+*.pyc
+
+# Machine-local shell overrides can contain secrets; deliberately not synced.
+/asahi/home/.bashrc.local
+/asahi/home/.bash_profile.local
+/asahi/home/.bashrc.d/

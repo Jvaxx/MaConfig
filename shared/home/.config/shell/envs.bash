@@ -26,7 +26,5 @@ if [ -z "${LANG:-}" ]; then
   export LANG
 fi
 
-case ":$PATH:" in
-  *":$HOME/.local/bin:"*) ;;
-  *) export PATH="$PATH:$HOME/.local/bin" ;;
-esac
+# Also used by .bash_profile for non-interactive login shells.
+[[ ! -r "$HOME/.config/shell/path.bash" ]] || source "$HOME/.config/shell/path.bash"

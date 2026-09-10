@@ -19,14 +19,22 @@ if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook bash)"
 fi
 
-# fzf keybindings/completion. Arch ships them in /usr/share/fzf, Fedora in
-# /usr/share/fzf/shell, and the upstream installer in ~/.fzf.
+# Modern fzf emits its own integration; no distro-specific paths required.
+# Keep a fallback for older installs, loading at most one copy.
 if command -v fzf >/dev/null 2>&1; then
-  for _d in /usr/share/fzf /usr/share/fzf/shell "$HOME/.fzf/shell"; do
-    [[ -f $_d/completion.bash ]]   && source "$_d/completion.bash"
-    [[ -f $_d/key-bindings.bash ]] && source "$_d/key-bindings.bash"
-  done
-  unset _d
+  if _fzf_init="$(fzf --bash 2>/dev/null)"; then
+    eval "$_fzf_init"
+  else
+    for _d in /usr/share/fzf /usr/share/fzf/shell "$HOME/.fzf/shell"; do
+      if [[ -f $_d/completion.bash && -f $_d/key-bindings.bash ]]; then
+        source "$_d/completion.bash"
+        source "$_d/key-bindings.bash"
+        break
+      fi
+    done
+    unset _d
+  fi
+  unset _fzf_init
 fi
 
 if command -v gh >/dev/null 2>&1; then

@@ -1,5 +1,9 @@
 ---@diagnostic disable: missing-fields
 
+if vim.fn.has("nvim-0.12") == 0 then
+    error("Cette configuration exige Neovim >= 0.12 (vim.pack). Vérifier :version et le PATH.")
+end
+
 -- INFO: Options générales
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -7,6 +11,7 @@ vim.opt.termguicolors = true
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.mouse = "a"
+require("config.remote_clipboard").setup()
 vim.opt.clipboard = "unnamedplus"
 vim.opt.undofile = true
 vim.opt.signcolumn = "yes"
@@ -60,8 +65,26 @@ local missing_parsers = vim.iter(required_parsers)
     end)
     :totable()
 if #missing_parsers > 0 then
-    require("nvim-treesitter").install(missing_parsers)
+    if vim.fn.executable("tree-sitter") == 1 and vim.fn.executable("cc") == 1 then
+        -- First install only: wait so the first FileType event can highlight.
+        -- A parser/build failure should not prevent editing plain text.
+        local ok, err = pcall(function()
+            require("nvim-treesitter").install(missing_parsers):wait(300000)
+        end)
+        if not ok then
+            vim.notify("Installation Treesitter: " .. tostring(err), vim.log.levels.WARN)
+        end
+    else
+        vim.notify("Parsers manquants: installer tree-sitter-cli et un compilateur C (tier 2).", vim.log.levels.WARN)
+    end
 end
+vim.api.nvim_create_autocmd("FileType", {
+    group = vim.api.nvim_create_augroup("MaConfigTreesitter", { clear = true }),
+    callback = function(args)
+        -- No parser for this filetype is normal; use standard syntax instead.
+        pcall(vim.treesitter.start, args.buf)
+    end,
+})
 
 -- INFO: Autocomplétion
 vim.pack.add({ "https://github.com/saghen/blink.cmp" }, { confirm = false })
@@ -223,10 +246,25 @@ vim.pack.add({
     "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim", -- auto installer
 }, { confirm = false })
 
-require("mason").setup()
+-- Prefer system/project binaries (Fedora ARM64, Arch, mise, etc.). Mason only
+-- fills gaps; it must not shadow a working distro clangd with another build.
+local lsp_commands = {
+    lua_ls = "lua-language-server",
+    clangd = "clangd",
+    rust_analyzer = "rust-analyzer",
+    gopls = "gopls",
+    pyright = "pyright-langserver",
+    ruff = "ruff",
+}
+require("mason").setup({ PATH = "append" })
+-- Auto-enable Mason servers after successful async installation. System
+-- servers are explicitly enabled below; Mason does not do that for us.
 require("mason-lspconfig").setup()
+local missing_servers = vim.tbl_filter(function(server)
+    return vim.fn.executable(lsp_commands[server]) == 0
+end, vim.tbl_keys(lsp_servers))
 require("mason-tool-installer").setup({
-    ensure_installed = vim.tbl_keys(lsp_servers),
+    ensure_installed = missing_servers,
 })
 
 -- configure each lsp server on the table
@@ -271,6 +309,9 @@ for server, config_lsp in pairs(lsp_servers) do
             end
         end,
     }, { before_init = overrides.before_init }))
+    if vim.fn.executable(lsp_commands[server]) == 1 then
+        vim.lsp.enable(server)
+    end
 end
 
 -- INFO: Telescope

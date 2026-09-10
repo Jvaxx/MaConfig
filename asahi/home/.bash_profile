@@ -1,12 +1,6 @@
 # ~/.bash_profile — Fedora Asahi Remix.
-# Login shells: get the user PATH bits Fedora expects, then defer to .bashrc.
-
-[[ -f ~/.bashrc ]] && . ~/.bashrc
-
-if [ -d "$HOME/.local/bin" ]; then
-  case ":$PATH:" in
-    *":$HOME/.local/bin:"*) ;;
-    *) PATH="$HOME/.local/bin:$PATH" ;;
-  esac
-fi
-export PATH
+# Set user tool paths even for non-interactive login shells; no tool activation.
+[[ ! -r "$HOME/.config/shell/path.bash" ]] || source "$HOME/.config/shell/path.bash"
+[[ ! -r "$HOME/.bashrc" ]] || source "$HOME/.bashrc"
+# Machine-local login customisations, deliberately outside MANIFEST.
+[[ ! -r "$HOME/.bash_profile.local" ]] || source "$HOME/.bash_profile.local"

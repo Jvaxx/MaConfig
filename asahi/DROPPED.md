@@ -1,186 +1,146 @@
-# Ce qui n'a pas suivi sur le MacBook
+# Ce qui ne suit pas automatiquement depuis quattro
 
-Audit de l'élagage `quattro` (Arch/Hyprland/x86_64/NVIDIA) → `asahi`
-(Fedora/KDE/aarch64/pas de GPU). 232 paquets pacman en entrée, ~95 en sortie.
+Portage du poste Arch/Hyprland/Omarchy/x86_64 vers Fedora Asahi Remix/KDE/aarch64.
+Cette liste décrit les **choix du profil**, pas une matrice exhaustive de support
+matériel ou logiciel. La liste effective reste `packages.dnf` + `bootstrap.sh`;
+les versions téléchargées sont dans `assets.json`.
 
-Rien n'est supprimé en silence : si un paquet ou un fichier manque sur le Mac,
-il est ci-dessous avec la raison.
+Le M3 Pro concerné n'a pas encore d'accélération GPU dans son installation.
+La veille, les sorties vidéo, le décodage et les périphériques dépendent du noyau
+et du matériel: aucun script ne tente de les activer ou de remplacer leur pile.
 
----
+## 1. Infrastructure Arch et démarrage
 
-## 1. Paquets — infrastructure Arch (~25)
+Non importés: `base`, `base-devel`, `fakeroot`, `yay`, `pacman-contrib`, `expac`,
+`kernel-modules-hook`, `mkinitcpio`, `linux`, `linux-headers`, `linux-firmware`,
+`limine`, `limine-mkinitcpio-hook`, `limine-snapper-sync`, `snapper`, ainsi que
+les configurations de boot, initramfs, partitions et snapshots du poste fixe.
 
-Sans objet sur Fedora, qui a son propre équivalent ou n'en a pas besoin.
+Fedora/Asahi gère son propre démarrage. Ne pas supposer que le schéma de partitions
+est Btrfs ou identique à celui du PC. Les utilitaires comme `sudo`, `btrfs-progs`,
+`dosfstools`, `exfatprogs`, `efibootmgr`, `zram-generator`, `plymouth` peuvent
+exister sur Fedora, mais ne sont pas réinstallés pour imiter Arch. `man-db` est
+conservé. Les compilateurs/outils de build sont listés explicitement au tier 2.
 
-`base` `base-devel` `fakeroot` `sudo` `yay` `pacman-contrib` `expac`
-`kernel-modules-hook` `mkinitcpio` `linux` `linux-headers` `linux-firmware`
-`limine` `limine-mkinitcpio-hook` `limine-snapper-sync` `snapper` `btrfs-progs`
-`zram-generator` `plymouth` `efibootmgr` `dosfstools` `exfatprogs` `usage`
-`man-db`\*
+## 2. Matériel du poste fixe
 
-> Le bootloader (limine), l'initramfs (mkinitcpio) et les snapshots (snapper +
-> btrfs) sont pris en charge côté Fedora par grub/dracut et un layout Btrfs
-> différent. `zram-generator` existe déjà par défaut sur Fedora.
-> \* `man-db` est conservé, il est juste dans les deux listes.
+Non importés: `nvidia-open-dkms`, `nvidia-utils`, `lib32-nvidia-utils`,
+`libva-nvidia-driver`, `amd-ucode`, `ddcutil`, `asdcontrol`, `bolt`.
 
-## 2. Paquets — matériel x86 / NVIDIA (~8)
+Les pilotes NVIDIA et le microcode AMD n'ont aucun rôle ici. Les autres outils
+sont exclus faute de besoin établi sur ce portable, pas parce que leur nom
+implique systématiquement une incompatibilité ARM. Aucun changement de noyau,
+firmware, Mesa, gestion thermique, backlight ou énergie n'est appliqué.
 
-`nvidia-open-dkms` `nvidia-utils` `lib32-nvidia-utils` `libva-nvidia-driver`
-`amd-ucode` `ddcutil` `asdcontrol` `bolt`
+## 3. Hyprland et Omarchy
 
-> Aucun GPU NVIDIA ni microcode AMD sur M3. `ddcutil`/`asdcontrol` pilotent la
-> luminosité d'écrans externes en DDC/CI — l'écran interne du MacBook passe par
-> le backlight du noyau, et le HDMI est de toute façon désactivé sur M3 pour
-> l'instant.
+Non importés: `hyprland`, `hyprland-guiutils`, `hyprland-preview-share-picker`,
+`hyprpicker`, `hyprsunset`, `xdg-desktop-portal-hyprland`, `uwsm`, `quickshell`,
+`waybar`, `walker`, `grim`, `slurp`, `wtype`, `xdg-terminal-exec`,
+`wayland-pipewire-idle-inhibit`, `udiskie`, `omarchy`, `omarchy-keyring`,
+`omarchy-nvim`, `omarchy-settings`, `omacalc`, `omacut`, `omawrite`, `aether`,
+`herdr`, `tobi-try`, `tensaku`, `ttfx`, `woff2-font-awesome`, `yaru-icon-theme`,
+`gnome-themes-extra`.
 
-## 3. Paquets — pile Hyprland / Omarchy (~38)
+Plasma apporte KWin, ses portails/lanceurs et ses propres intégrations. On ne
+supprime aucun portail GTK éventuellement nécessaire aux applications installées,
+et on ne remplace pas SDDM. Spectacle, Night Color et les réglages Plasma couvrent
+certains usages de grim/slurp/hyprsunset; les binds ne sont pas transposés.
 
-`hyprland` `hyprland-guiutils` `hyprland-preview-share-picker` `hyprpicker`
-`hyprsunset` `xdg-desktop-portal-hyprland` `xdg-desktop-portal-gtk` `uwsm`
-`quickshell` `waybar` `walker` `sddm`\* `grim` `slurp` `wtype`
-`xdg-terminal-exec` `wayland-pipewire-idle-inhibit` `udiskie`
-`omarchy` `omarchy-keyring` `omarchy-nvim` `omarchy-settings` `omacalc`
-`omacut` `omawrite` `aether` `herdr` `tobi-try` `tensaku` `ttfx`
-`woff2-font-awesome` `yaru-icon-theme` `gnome-themes-extra`
+Configs/scripts exclus:
 
-> Plasma fournit son propre compositeur, portail, barre, lanceur, capture
-> (Spectacle), automontage et gestion de veille.
-> \* `sddm` est déjà là via Fedora KDE, inutile de le réinstaller.
+- `.config/hypr/{hyprland,bindings,input,looknfeel,monitors}.lua`;
+- `.config/omarchy/`, plugins Quickshell et états de workspaces Omarchy;
+- `.local/bin/kb-layout-toggle`, `hypr-window-full-width`, `omarchy-shazam`;
+- `.local/bin/bbox-mic`, `bbox-mic-bridge` et son service utilisateur;
+- lanceurs web Claude/Perplexity appelant `omarchy-launch-webapp`.
 
-Équivalents Plasma des captures/couleurs : `spectacle` (grim+slurp),
-`kcolorchooser` (hyprpicker), Night Color intégré (hyprsunset).
+Un lanceur web indépendant peut être recréé depuis le navigateur/KDE. Les scripts
+Bbox sont spécifiques au matériel du salon; aucun service n'est importé.
 
-## 4. Paquets — applis GNOME remplacées par KDE (~12)
+## 4. Applications GNOME et intégration KDE
 
-| Arrive de quattro | Remplacé par (déjà dans Fedora KDE) |
+Le profil ne réinstalle pas `nautilus`, `nautilus-python`, `sushi`, `evince`,
+`imv`, `gnome-disk-utility`, `gvfs-mtp`, `gvfs-nfs`, `gvfs-smb` pour copier le PC.
+Les applications/intégrations KDE (Dolphin, Okular, Gwenview, Partition Manager,
+KIO) couvrent les besoins courants; leur présence dépend de l'installation.
+
+**KWallet n'est pas un remplacement RPM universel de libsecret/gnome-keyring.**
+Les applications et Flatpaks peuvent nécessiter Secret Service ou d'autres
+intégrations. Laisser les dépendances de Fedora gérer cela; ne rien désinstaller
+au nom du portage.
+
+## 5. Logiciels graphiques exclus par prudence ou préférence
+
+Le profil initial a omis: `steam`, `curseforge`, `moonlight-qt`, `obs-studio`,
+`gpu-screen-recorder`, `kdenlive`, `audacity`, `lmstudio-bin`, `zen-browser-bin`,
+`openai-codex-desktop`, `typora`, `chromium`, `alacritty`, `kitty`, `spotify`,
+`jellyfin-ffmpeg`. Ghostty n'est pas importé non plus.
+
+Ce n'est **pas** une liste de logiciels exigeant tous un GPU ou impossibles sur
+ARM64. Audacity, notamment, ne nécessite pas d'accélération GPU. Chromium et
+d'autres applications peuvent utiliser un rendu logiciel. La disponibilité des
+builds upstream évolue: vérifier séparément architecture et performances avant
+d'ajouter une application.
+
+Foot est retenu pour son rendu CPU; Konsole reste utilisable. Les terminaux à
+rendu GPU sont simplement hors du profil. Les Flatpaks LocalSend/Obsidian/Signal
+ont des builds ARM64 lors de l'audit, mais Flutter/Electron peuvent rester coûteux
+en rendu logiciel. Ils sont au tier 4, pas installés par un bootstrap CLI seul.
+Mpv dispose d'une config locale de sortie logicielle (`wlshm`, repli `x11`).
+
+## 6. Outils liés aux usages du PC
+
+Non réinstallés automatiquement: `songrec`, `voxtype-bin`, `freerdp`, `tzupdate`,
+`fcitx5`, `fcitx5-gtk`, `fcitx5-qt`, `mariadb-libs`, `postgresql-libs`,
+`dotnet-runtime`, `dotnet-runtime-9.0`, `android-tools`, `qemu-user-static-binfmt`.
+
+L'absence de leurs binds/projets/IME motive ce choix. Ajouter les runtimes et
+services selon les besoins réels; l'émulation x86 n'est pas activée implicitement.
+
+## 7. Services et conteneurs
+
+PipeWire/WirePlumber, NetworkManager, Bluetooth, impression, portails, firewalld
+et gestion d'énergie restent sous le contrôle de Fedora KDE. Le profil ne
+prétend pas que tous les paquets Arch de même rôle sont préinstallés, ni qu'ils
+portent les mêmes noms Fedora. Aucune de ces intégrations n'est supprimée.
+
+Docker est remplacé dans la sélection par Podman, `podman-docker` et
+`podman-compose`. **Le socket utilisateur et DOCKER_HOST restent opt-in** pour
+lazydocker; voir RESTORE.md. Cela ne garantit pas une compatibilité totale avec
+les stacks Docker du PC.
+
+## 8. Clavier et shell
+
+Les layouts personnalisés `frmac`/`qwertyansi` restent **locaux à quattro**.
+Ils ne sont pas installés sur le MacBook et aucune disposition Plasma n'est
+imposée. Vérifier la variante existante et assigner une touche Compose; le simple
+fait d'avoir un clavier Apple ne sélectionne pas les conventions macOS sous Linux.
+
+Les règles Compose personnelles et emoji sont partagées. Le `.XCompose` Asahi
+inclut `%L` plutôt que `/usr/share/omarchy/default/xcompose`; quattro continue de
+charger la version Omarchy et n'inclut pas le fichier emoji partagé.
+
+Retirés du shell Asahi: source du rc Omarchy, conda/miniforge du PC, PATH grok et
+LM Studio, et alias dépendant d'outils Omarchy absents. Conservés: les préférences
+CLI portables, **NVM déjà présent sur le Mac**, les fragments `.bashrc.d` et les
+overrides locaux hors Git. Les chemins Cargo/Go/local/bin sont pris en charge.
+
+## 9. Divergences locales et corrections de compatibilité
+
+| Élément | Choix Asahi |
 |---|---|
-| `nautilus`, `nautilus-python`, `sushi` | `dolphin` (+ aperçu intégré) |
-| `evince` | `okular` |
-| `imv` | `gwenview` |
-| `gnome-disk-utility` | `partitionmanager` |
-| `gnome-keyring`, `libsecret` | `kwalletmanager` |
-| `gvfs-mtp`, `gvfs-nfs`, `gvfs-smb` | KIO (`kio-extras`) |
-| `gnome-themes-extra` | Breeze |
+| foot | palette intégrée, syntaxe foot 1.27 `[colors-dark]`, raccourcis sans Insert obligatoire |
+| btop | thème gruvbox distribué, rafraîchissement 2 s, affichage GPU désactivé |
+| mpv | sortie CPU Wayland, aucun décodage matériel supposé |
+| Neovim | RPM Fedora >= 0.12, pas d'installateur tarball destructif |
+| Tree-sitter CLI | RPM Fedora; parsers compilés localement |
+| LSP | serveurs système explicitement activés; Mason complète les absences |
+| lazygit | archive ARM64 épinglée/vérifiée; abandon du COPR atim non maintenu |
+| Nerd Font | archive officielle épinglée/vérifiée; le COPR précédemment référencé n'existe pas |
+| restore/sync | validation, staging, backups conservés, erreurs non masquées, commit limité au MANIFEST |
 
-## 5. Paquets — exigent un GPU, ou x86 seulement (~16)
-
-`steam` `curseforge` `moonlight-qt` `obs-studio` `gpu-screen-recorder`
-`kdenlive` `audacity` `lmstudio-bin` `zen-browser-bin` `openai-codex-desktop`
-`typora` `chromium` `alacritty` `kitty` `spotify` `jellyfin-ffmpeg`
-
-> **Le point central de cette machine.** Asahi n'a pas encore d'accélération 3D
-> sur M3 : tout passe par llvmpipe (rendu CPU). Tout ce qui suppose OpenGL/Vulkan
-> est soit injouable, soit un radiateur.
->
-> `kitty` et `alacritty` sont dans cette liste et pas ailleurs : ce sont des
-> terminaux **GPU**. C'est précisément pourquoi `foot` (rendu CPU) est le
-> terminal retenu ici. `ghostty` (config dans `macos/`) est dans le même cas.
->
-> `lmstudio-bin`, `curseforge`, `zen-browser-bin`, `typora`,
-> `openai-codex-desktop` n'ont par ailleurs pas de build aarch64 Linux.
-
-## 6. Paquets — spécifiques au site / au matériel de la maison (~8)
-
-`songrec` `voxtype-bin` `asdcontrol` `freerdp` `tzupdate` `fcitx5`
-`fcitx5-gtk` `fcitx5-qt` `mariadb-libs` `postgresql-libs` `dotnet-runtime`
-`dotnet-runtime-9.0` `android-tools` `qemu-user-static-binfmt`
-
-> `songrec` sert au bind SUPER+code:38 (Shazam) qui n'existe plus sans Hyprland.
-> `fcitx5` : la saisie se fait via XKB + Compose ici, pas d'IME CJK configuré.
-> `dotnet`/`mariadb`/`postgresql` : à réinstaller au cas par cas, selon les
-> projets réellement ouverts sur cette machine.
-
-## 7. Paquets — fournis d'office par Fedora KDE (~20)
-
-Installés par la distribution, pas besoin de les lister :
-
-`pipewire` `pipewire-alsa` `pipewire-jack` `pipewire-pulse` `wireplumber`
-`gst-plugin-pipewire` `libpulse` `alsa-utils` `networkmanager` `bluez`
-`bluez-tools` `bluez-utils` `avahi` `nss-mdns` `cups` `cups-filters`
-`cups-pk-helper` `system-config-printer` `nfs-utils` `wireless-regdb`
-`qt5-wayland` `qt6-connectivity` `qt6-imageformats` `qt6-tools`
-`python-gobject` `brightnessctl` `power-profiles-daemon`
-
-`ufw` / `ufw-docker` → Fedora utilise **firewalld**, actif par défaut.
-`docker` / `docker-buildx` / `docker-compose` → remplacés par **podman**
-(rootless par défaut) + `podman-docker` pour l'alias `docker`.
-
----
-
-## 8. Fichiers de config non repris (29 sur 41)
-
-### Hyprland — sans objet sous KWin
-`.config/hypr/hyprland.lua` `bindings.lua` `input.lua` `looknfeel.lua`
-`monitors.lua`
-
-> `monitors.lua` décrit les écrans du poste fixe.
-
-### Layouts XKB — `frmac`, `qwertyansi`
-`.config/xkb/symbols/frmac` `.config/xkb/symbols/qwertyansi`
-
-> **Non repris, et c'est le point important.** Ces deux layouts ont été écrits
-> pour faire **imiter le comportement du Mac à un clavier PC** sur le poste fixe.
-> Sur le MacBook, ce comportement est celui par défaut : les réglages clavier
-> Plasma d'origine sont déjà la cible, il n'y a rien à installer ni à activer.
->
-> Corollaire : `libxkbcommon-tools` et `xkbcomp` ne sont pas dans `packages.dnf`,
-> et l'étape « layout clavier » a disparu de RESTORE.md.
-
-### Omarchy — le shell, le menu, les extensions
-`.config/omarchy/shell.json` `shell.toml`
-`.config/omarchy/plugins/jvz.menu/` (4 fichiers QML/JS)
-`.config/omarchy/extensions/omarchy-menu.jsonc` `menu.sh`
-`.config/omarchy/defaults/agent`
-`.config/omarchy/hooks/post-update.d/setup-agent.hook`
-`.local/state/omarchy/workspace-layouts/{1,2,4}.lua`
-plugins externes : `io.github.jvaxx.scrolling-position`,
-`io.github.thisisgm.omapods`
-
-> Tout ça tourne dans Quickshell, piloté par le binaire `omarchy`. Rien de
-> transposable à Plasma sans réécriture complète.
-
-### Scripts de keybinding — le bind qui les appelait n'existe plus
-`.local/bin/kb-layout-toggle` `hypr-window-full-width` `omarchy-shazam`
-`bbox-mic` `bbox-mic-bridge` + `.config/systemd/user/bbox-mic-bridge.service`
-
-> `kb-layout-toggle` appelle `hyprctl switchxkblayout` : sous Plasma, le
-> basculement frmac↔qwertyansi se règle dans Réglages > Clavier (voir RESTORE.md).
-> `bbox-mic*` parle au micro de la télécommande Bbox du salon — sans objet sur un
-> portable, et le service systemd utilisateur échouerait au démarrage.
-
-### Web apps et lanceurs
-`.local/share/applications/{Claude,Perplexity}.desktop`
-`.local/share/icons/hicolor/256x256/apps/{claude,perplexity}.png`
-
-> Générés par `omarchy webapp install`, ils lancent `omarchy-launch-webapp`.
-> À recréer à la main en `.desktop` Plasma pointant vers le navigateur si besoin.
-
-### Terminal
-`.config/kitty/kitty.conf` — kitty n'est pas installé (GPU, cf. §5).
-
-### Shell
-Trois blocs retirés de `.bashrc` (documenté en tête du fichier `asahi/home/.bashrc`) :
-
-| Bloc | Raison |
-|---|---|
-| `source "$OMARCHY_PATH/default/bash/rc"` | fichier inexistant hors Omarchy — remplacé par `~/.config/shell/{envs,aliases,init}.bash` |
-| init conda / `__conda_hashr` | pas de miniforge3 installé ici |
-| PATH grok | installeur x86_64 seulement |
-| PATH LM Studio (×2) | x86_64, et demande un GPU |
-
-Aliases Omarchy volontairement **non** repris car ils appellent des binaires
-absents : `a` (omarchy-agent), `c`/`cx`/`cy` (opencode/claude/codex),
-`h` (herdr), `ic`/`ix`/`icx` (tdl), `r` (rails), `mup` (mise), `try`.
-Les autres (`ls`/`lt` eza, `cd`→zoxide, `ff` fzf, `g*` git, `n` nvim, `..`)
-sont dans `shared/home/.config/shell/aliases.bash`.
-
----
-
-## 9. Divergences volontaires (repris mais modifiés)
-
-| Fichier | Modification | Pourquoi |
-|---|---|---|
-| `.config/foot/foot.ini` | palette gruvbox-material inlinée | l'`include=~/.local/state/omarchy/current/theme/foot.ini` n'existe pas, et foot refuse de démarrer sur un include manquant |
-| `.config/btop/btop.conf` | `color_theme` : `"current"` → `"gruvbox_material_dark"` | `current` est un symlink posé par le sélecteur de thème Omarchy ; le thème visé est fourni de base par btop |
-| `.XCompose` | `include "/usr/share/omarchy/default/xcompose"` → `include "%L"` + deux fichiers partagés | le xcompose Omarchy n'existe pas ici ; ses 24 emoji + la typographie sont recopiés dans `shared/home/.config/xcompose/emoji`, les règles perso dans `.../personal`. quattro inclut la version Omarchy et **pas** `emoji`, pour éviter le doublon |
-| `neovim` | tarball officielle aarch64 au lieu du RPM | Fedora 43 = 0.11.x, or `init.lua` appelle `vim.pack.add()` (0.12+) |
+`shared/home` ne contient que les configurations communes effectivement utilisées
+(nvim, shell, tmux, git, starship, xcompose). Il ne contient pas les layouts XKB.
+Les scripts de sauvegarde historiques de quattro/macOS ne sont pas remplacés par
+ce correctif Asahi; leurs contraintes propres doivent être auditées séparément.

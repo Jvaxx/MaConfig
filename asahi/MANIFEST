@@ -9,15 +9,15 @@
 # (~/.local/state/omarchy/current/...) est forcément spécifique à l'hôte.
 
 # --- Neovim (config vim.pack, identique sur les deux machines) ---
-# Exige nvim >= 0.12 : bootstrap.sh installe la tarball aarch64 officielle,
-# les dépôts Fedora ne fournissent que 0.11.x.
+# Exige nvim >= 0.12 : fourni par les mises à jour Fedora 44 (RPM neovim).
 shared:.config/nvim
 
 # --- Environnement shell ---
-# .bashrc/.bash_profile sont locaux (pas d'omarchy, pas de conda/grok/LM Studio),
-# mais ils sourcent les trois fragments partagés ci-dessous.
+# .bashrc/.bash_profile restent locaux et préservent les hooks NVM/.bashrc.d.
+# Les overrides .bashrc.local/.bash_profile.local restent hors sauvegarde/Git.
 .bashrc
 .bash_profile
+shared:.config/shell/path.bash
 shared:.config/shell/envs.bash
 shared:.config/shell/aliases.bash
 shared:.config/shell/init.bash
@@ -35,10 +35,13 @@ shared:.config/git/config
 # kitty/alacritty/ghostty exigent OpenGL et ne sont pas installés ici.
 .config/foot/foot.ini
 
+# --- Vidéo (sortie CPU Wayland; à revoir quand le GPU sera utilisable) ---
+.config/mpv/mpv.conf
+
 # --- Clavier ---
-# Pas de layout XKB custom ici, volontairement. frmac/qwertyansi existent sur
-# quattro pour faire *imiter le Mac* à un clavier PC ; sur le Mac lui-même le
-# comportement visé est celui par défaut. Rien à configurer.
+# Aucun layout XKB custom installé. Les réglages Plasma actuels sont conservés;
+# vérifier disposition/variante et assigner une touche Compose si nécessaire.
+# Le matériel Apple seul ne garantit pas le layout/les raccourcis de macOS.
 #
 # ~/.XCompose local (include "%L" au lieu du xcompose Omarchy), le contenu vient
 # des deux fichiers partagés : emoji (copie du set Omarchy) + personal.
