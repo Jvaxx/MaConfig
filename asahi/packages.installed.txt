@@ -1,4 +1,4 @@
-# Paquets utilisateur — 2026-09-11T09:33:58.479781+00:00
+# Paquets utilisateur — 2026-09-11T18:36:17.602031+00:00
 # Référence seulement; liste voulue: packages.dnf.
 ModemManager
 NetworkManager
@@ -119,6 +119,7 @@ fprintd-pam
 fuse
 fwupd
 fzf
+gdb
 gh
 ghostscript
 git
@@ -228,6 +229,8 @@ kwin
 kwrite
 less
 libappindicator-gtk3
+libavcodec-freeworld
+libdrm-devel
 libertas-firmware
 libglvnd-gles
 libreoffice-calc
@@ -235,6 +238,8 @@ libreoffice-emailmerge
 libreoffice-graphicfilter
 libreoffice-impress
 libreoffice-writer
+libva-devel
+libva-utils
 llvm
 logrotate
 lrzsz
@@ -337,6 +342,7 @@ ripgrep
 rmtfs
 rootfiles
 rpm
+rpmfusion-free-release
 rsync
 rsyslog
 ruff
@@ -387,6 +393,7 @@ update-m1n1
 usb_modeswitch
 usbutils
 util-linux
+v4l-utils
 vim-enhanced
 vim-minimal
 vlc-plugin-gstreamer
