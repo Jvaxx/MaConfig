@@ -1,6 +1,6 @@
 add_newline = true
 command_timeout = 200
-format = "$conda$python[$directory$git_branch$git_status]($style)$character"
+format = "$conda$python$hostname[$directory$git_branch$git_status]($style)$character"
 
 [conda]
 format = '[$symbol\($environment\)]($style) '
@@ -18,6 +18,13 @@ detect_extensions = []
 detect_files = []
 detect_folders = []
 detect_env_vars = ["VIRTUAL_ENV"]
+
+# Only shown over SSH, so a remote prompt is visually distinct from a local one
+[hostname]
+ssh_only = true
+format = "[$ssh_symbol$hostname](bold yellow) "
+ssh_symbol = "󰣀 "
+trim_at = "."
 
 [character]
 error_symbol = "[✗](bold cyan)"
