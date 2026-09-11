@@ -188,13 +188,14 @@ class ConfigTests(unittest.TestCase):
         entries = cio.manifest(self.manifest, self.root)
         self.assertEqual(entries[0].relative, ".config/a space")
 
-    def test_metadata_uses_installed_query_newlines_and_deduplication(self):
+    def test_metadata_uses_userinstalled_query_newlines_and_deduplication(self):
         with mock.patch.object(cio.shutil, "which", side_effect=lambda c: "/dnf" if c == "dnf" else None):
             with mock.patch.object(cio, "execute", return_value=subprocess.CompletedProcess([], 0, "z\na\na\n")) as run:
                 data = cio.metadata()
         command = run.call_args.args[0]
         self.assertIn("--cacheonly", command)
-        self.assertIn("--installed", command)
+        self.assertIn("--userinstalled", command)
+        self.assertNotIn("--installed", command)
         self.assertEqual(command[-1], "%{name}\n")
         self.assertTrue(data["packages.installed.txt"].endswith("a\nz\n"))
 

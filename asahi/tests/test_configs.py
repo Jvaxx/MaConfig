@@ -15,6 +15,7 @@ class ShellTests(unittest.TestCase):
     def test_bash_syntax(self):
         paths = list((PROJECT / "asahi").glob("*.sh"))
         paths += list((PROJECT / "asahi/home").glob(".bash*"))
+        paths += [p for p in (PROJECT / "asahi/home/.local/bin").glob("*") if p.is_file()]
         paths += list((PROJECT / "shared/home/.config/shell").glob("*.bash"))
         for path in paths:
             with self.subTest(path=path):
@@ -32,6 +33,41 @@ class ShellTests(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("deprecated", result.stderr)
+
+    def test_kde_shortcuts_script_sends_expected_qt_keycodes(self):
+        script = PROJECT / "asahi/home/.local/bin/kde-omarchy-keys"
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home / "bin").mkdir()
+            log = home / "calls.txt"
+            (home / "bin/busctl").write_text(
+                '#!/bin/bash\n'
+                'printf "%s\\n" "$*" >> "$CALL_LOG"\n'
+                'case "$*" in *shortcutKeys*) echo "a(ai) 0";; esac\n'
+                'exit 0\n')
+            for name in ("kwriteconfig6", "xdg-mime"):
+                (home / "bin" / name).write_text(
+                    f'#!/bin/bash\nprintf "{name} %s\\n" "$*" >> "$CALL_LOG"\n')
+            for path in (home / "bin").iterdir():
+                path.chmod(0o755)
+            (home / "config").mkdir()
+            (home / "config/mimeapps.list").write_text(
+                "x-scheme-handler/terminal=foot.desktop\n")
+            env = dict(os.environ, PATH=f"{home}/bin:/usr/bin:/bin", CALL_LOG=str(log),
+                       HOME=str(home), XDG_CONFIG_HOME=str(home / "config"))
+            result = subprocess.run(["bash", str(script)], env=env,
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = log.read_text()
+            # Qt::Key | Qt::KeyboardModifiers: Meta+W, Alt+F4, Meta+Return, Meta+O.
+            self.assertIn("kwin Window Close", calls)
+            for keycode in ("268435543", "150994995", "285212676", "268435535"):
+                self.assertIn(keycode, calls)
+            # Un lanceur .desktop doit être enregistré avant de recevoir sa touche.
+            self.assertLess(calls.index("doRegister"),
+                            calls.index("285212676"))
+            self.assertIn("kwriteconfig6 --file kdeglobals --group General "
+                          "--key TerminalApplication foot", calls)
 
     def test_path_priority_deduplication_and_custom_tool_roots(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+# Raccourcis Plasma alignés sur les réflexes Omarchy, plus foot comme terminal.
+#
+# Sur le clavier Apple, Cmd est envoyé comme Super/Meta (aucun altwin: dans
+# kxkbrc), donc « Cmd + W » s'écrit « Meta+W » ici.
+#
+# Pourquoi passer par D-Bus et non par kwriteconfig6: dans Plasma 6.7,
+# KGlobalAccel vit à l'intérieur de kwin_wayland (voir `busctl --user list`).
+# Il lit ~/.config/kglobalshortcutsrc au démarrage de session et le réécrit
+# ensuite depuis sa mémoire; un fichier édité en cours de session est donc
+# ignoré, puis écrasé. Le démon est la source de vérité: on lui parle, et c'est
+# lui qui persiste dans kglobalshortcutsrc.
+#
+# Usage: kde-omarchy-keys [--dry-run]
+set -euo pipefail
+
+DRY=0
+case "${1-}" in
+  --dry-run) DRY=1 ;;
+  --help|-h) sed -n '2,15p' "$0"; exit 0 ;;
+  "") ;;
+  *) echo "Option inconnue: $1" >&2; exit 2 ;;
+esac
+
+command -v busctl >/dev/null || { echo "busctl requis (systemd)" >&2; exit 1; }
+command -v kwriteconfig6 >/dev/null || { echo "kwriteconfig6 requis (Plasma 6)" >&2; exit 1; }
+busctl --user status org.kde.kglobalaccel >/dev/null 2>&1 \
+  || { echo "KGlobalAccel absent du bus: lancer ce script DANS une session Plasma." >&2; exit 1; }
+
+ACCEL=(busctl --user call org.kde.kglobalaccel /kglobalaccel org.kde.KGlobalAccel)
+
+# Qt::Key | Qt::KeyboardModifiers, l'entier que KGlobalAccel échange sur le bus.
+# Les lettres/chiffres valent leur code ASCII majuscule; les autres touches sont
+# dans l'espace 0x01000000 de qnamespace.h. Ajouter ici ce qui manque.
+qt_key() {
+  local name=$1 value=0 part
+  local IFS='+'
+  for part in $name; do
+    case "$part" in
+      Meta|Cmd) value=$((value | 0x10000000)) ;;
+      Ctrl)     value=$((value | 0x04000000)) ;;
+      Alt)      value=$((value | 0x08000000)) ;;
+      Shift)    value=$((value | 0x02000000)) ;;
+      [A-Z0-9]) printf -v part '%d' "'$part"; value=$((value | part)) ;;
+      Return)   value=$((value | 0x01000004)) ;;
+      Escape)   value=$((value | 0x01000000)) ;;
+      Tab)      value=$((value | 0x01000001)) ;;
+      Space)    value=$((value | 0x20)) ;;
+      Battery)  value=$((value | 0x0100013E)) ;;  # touche média "profil d'énergie"
+      Left)     value=$((value | 0x01000012)) ;;
+      Up)       value=$((value | 0x01000013)) ;;
+      Right)    value=$((value | 0x01000014)) ;;
+      Down)     value=$((value | 0x01000015)) ;;
+      F[1-9]|F1[0-2]) value=$((value | (0x01000030 + ${part#F} - 1))) ;;
+      *) echo "Touche non gérée: $part (dans $name)" >&2; return 1 ;;
+    esac
+  done
+  printf '%d' "$value"
+}
+
+# Une QKeySequence occupe toujours 4 entiers sur le bus, les inutilisés à zéro.
+sequences() {
+  local key
+  printf '%d' "$#"
+  for key in "$@"; do printf ' 4 %s 0 0 0' "$(qt_key "$key")"; done
+}
+
+# Le démon ne rend pas les séquences dans l'ordre où on les a posées; on compare
+# donc des ensembles triés, sinon le script se croirait à refaire à chaque appel.
+normalize() {
+  tr ' ' '\n' | grep -E '^[0-9]+$' | awk 'NR > 2 && (NR - 3) % 5 == 0' | sort -n | tr '\n' ' '
+}
+
+current() {
+  "${ACCEL[@]}" shortcutKeys as 4 "$1" "$2" "" "" 2>/dev/null | normalize
+}
+
+# bind <composant> <action> <nom lisible> <action lisible> <touche>...
+# Un composant en .desktop est un lanceur d'application: KGlobalAccel n'en crée
+# la moitié « services » de kglobalshortcutsrc que si on l'enregistre d'abord.
+# "none" = action déliée (on libère la touche pour quelqu'un d'autre).
+PENDING=0
+bind() {
+  local component=$1 action=$2 label=$3 description=$4; shift 4
+  [[ ${1-} == none ]] && shift
+  local wanted; wanted=$(sequences "$@" | normalize)
+  local before; before=$(current "$component" "$action")
+  # Un composant .desktop créé en cours de session répond à invokeShortcut et est
+  # bien écrit dans kglobalshortcutsrc, mais KWin ne capte sa touche qu'après
+  # avoir reconstruit ses composants "services" au démarrage de session.
+  [[ $component == *.desktop && -z $before && $# -gt 0 ]] && PENDING=1
+  if [[ "$before" == "$wanted" ]]; then
+    printf '  = %-28s %s\n' "$component/$action" "${*:-(aucune)}"
+    return 0
+  fi
+  printf '  %s %-28s %s\n' "$( ((DRY)) && echo '?' || echo '+')" "$component/$action" "${*:-(aucune)}"
+  ((DRY)) && return 0
+  # shellcheck disable=SC2086 # les entiers de la séquence sont des arguments distincts
+  if [[ $component == *.desktop ]]; then
+    "${ACCEL[@]}" doRegister as 4 "$component" "$action" "$label" "$description" >/dev/null
+  fi
+  # shellcheck disable=SC2046,SC2086
+  "${ACCEL[@]}" setShortcutKeys "asa(ai)u" 4 "$component" "$action" "$label" "$description" \
+    $(sequences "$@") 4 >/dev/null
+}
+
+echo "Raccourcis (Cmd = Meta):"
+# Cmd+W ferme la fenêtre, comme SUPER+W sous Omarchy. Alt+F4 est conservé: c'est
+# le raccourci que les applications Qt/GTK affichent dans leurs menus.
+# Meta+W appartenait à la vue d'ensemble de KWin, déplacée sur Meta+O (« Overview »).
+bind kwin Overview KWin "Vue d'ensemble" Meta+O
+bind kwin "Window Close" KWin "Fermer la fenêtre" Alt+F4 Meta+W
+# Cmd+Entrée ouvre foot; les autres lanceurs sont en Cmd+Maj+lettre, comme les
+# applications d'Omarchy.
+bind foot.desktop _launch Foot "Lancer un terminal" Meta+Return
+bind org.mozilla.firefox.desktop _launch Firefox "Lancer le navigateur" Meta+Shift+B
+# Meta+E (défaut Plasma pour Dolphin) est remplacé, pas doublé.
+bind org.kde.dolphin.desktop _launch Dolphin "Lancer le gestionnaire de fichiers" Meta+Shift+E
+# Le sélecteur de profil d'énergie garde ses deux touches d'origine: Meta+B reste
+# libre puisque le navigateur est passé en Meta+Maj+B.
+bind org_kde_powerdevil powerProfile PowerDevil "Profil d'énergie" Battery Meta+B
+
+# --- Krohnkite: pavage dynamique facon dwm/Hyprland ------------------------
+# Le script KWin n'est pas dans les dépôts Fedora; voir RESTORE.md pour son
+# installation épingée. Ses actions s'enregistrent dans le composant "kwin",
+# et plusieurs de ses touches par défaut étaient déjà prises par KWin.
+if [[ -f ${XDG_DATA_HOME:-$HOME/.local/share}/kwin/scripts/krohnkite/metadata.json ]]; then
+  if ((! DRY)); then
+    kwriteconfig6 --file kwinrc --group Plugins --key krohnkiteEnabled true
+    for key in screenGapTop screenGapBottom screenGapLeft screenGapRight screenGapBetween; do
+      kwriteconfig6 --file kwinrc --group Script-krohnkite --key "$key" 8
+    done
+    # KWin ne relit kwinrc que sur demande; sans ça le script reste inactif.
+    command -v qdbus-qt6 >/dev/null && qdbus-qt6 org.kde.KWin /KWin reconfigure >/dev/null || true
+  fi
+  # Meta+Entrée appartient à foot: la fenêtre maître passe sur Meta+Shift+Entrée.
+  bind kwin KrohnkiteSetMaster KWin "Krohnkite: fenêtre maître" Meta+Shift+Return
+  # Meta+HJKL (focus) et Meta+Shift+HJKL (déplacement) reviennent à Krohnkite,
+  # qui connaît la disposition; les équivalents KWin retournent à leur défaut
+  # (Meta+Alt+flèches) ou sont déliés, sinon les deux se disputent la touche.
+  bind kwin "Switch Window Left" KWin "Fenêtre à gauche" Meta+Alt+Left
+  bind kwin "Switch Window Down" KWin "Fenêtre en dessous" Meta+Alt+Down
+  bind kwin "Switch Window Up" KWin "Fenêtre au-dessus" Meta+Alt+Up
+  bind kwin "Switch Window Right" KWin "Fenêtre à droite" Meta+Alt+Right
+  for side in Left Bottom Top Right; do
+    bind kwin "Window Custom Quick Tile $side" KWin "Pavage manuel $side" none
+  done
+  bind kwin KrohnkiteFocusLeft KWin "Krohnkite: focus à gauche" Meta+H
+  bind kwin KrohnkiteFocusDown KWin "Krohnkite: focus en dessous" Meta+J
+  bind kwin KrohnkiteFocusUp KWin "Krohnkite: focus au-dessus" Meta+K
+  bind kwin KrohnkiteFocusRight KWin "Krohnkite: focus à droite" Meta+L
+  bind kwin KrohnkiteShiftLeft KWin "Krohnkite: déplacer à gauche" Meta+Shift+H
+  bind kwin KrohnkiteShiftDown KWin "Krohnkite: déplacer en dessous" Meta+Shift+J
+  bind kwin KrohnkiteShiftUp KWin "Krohnkite: déplacer au-dessus" Meta+Shift+K
+  bind kwin KrohnkiteShiftRight KWin "Krohnkite: déplacer à droite" Meta+Shift+L
+  # Meta+D/Meta+I redimensionnent la zone maître chez Krohnkite; "Peek at Desktop"
+  # lui disputait Meta+D et n'a pas de sens avec un pavage.
+  bind kwin "Show Desktop" KWin "Aperçu du bureau" none
+else
+  echo "  ! Krohnkite non installé: pavage et Meta+HJKL non configurés (voir RESTORE.md)" >&2
+fi
+
+# Terminal par défaut: Plasma lit TerminalApplication/TerminalService, le reste
+# du bureau (portails, applications GTK) passe par x-scheme-handler/terminal.
+echo "Terminal par défaut: foot"
+if ((! DRY)); then
+  kwriteconfig6 --file kdeglobals --group General --key TerminalApplication foot
+  kwriteconfig6 --file kdeglobals --group General --key TerminalService foot.desktop
+  # xdg-mime écrit bien mimeapps.list mais réclame `qtpaths` (paquet qt6-qtbase-devel,
+  # non installé) pour une étape KDE annexe: son bruit et son code de retour sont ignorés.
+  if command -v xdg-mime >/dev/null; then
+    xdg-mime default foot.desktop x-scheme-handler/terminal 2>/dev/null || true
+  fi
+  grep -q '^x-scheme-handler/terminal=foot.desktop$' "${XDG_CONFIG_HOME:-$HOME/.config}/mimeapps.list" \
+    || echo "  ! x-scheme-handler/terminal non associé à foot" >&2
+fi
+
+((DRY)) && echo "(simulation: rien n'a été modifié)"
+((PENDING)) && echo "Nouveau lanceur: sa touche ne sera captée qu'à la prochaine session."
+exit 0

@@ -129,8 +129,10 @@ def metadata() -> dict[str, str]:
     ])
     result = {"STATE": state}
     if shutil.which("dnf"):
+        # --userinstalled already selects installed packages; DNF5 rejects
+        # combining it with --installed.
         packages = execute([
-            "dnf", "--cacheonly", "repoquery", "--installed", "--userinstalled",
+            "dnf", "--cacheonly", "repoquery", "--userinstalled",
             "--qf", "%{name}\n",
         ], stdout=subprocess.PIPE).stdout
         result["packages.installed.txt"] = (

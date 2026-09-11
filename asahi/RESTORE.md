@@ -27,6 +27,7 @@ cd ~/Documents/MaConfig/asahi
 ./restore.sh --dry-run
 ./restore.sh                  # ou --link, après lecture ci-dessous
 exec bash -l
+kde-omarchy-keys              # raccourcis Plasma + terminal par défaut
 ```
 
 Une simulation n'installe rien, n'interroge pas les gestionnaires de paquets,
@@ -184,9 +185,69 @@ dépend de l'application et de sa pile de saisie.
 ```bash
 foot --check-config --config ~/.config/foot/foot.ini
 fc-match 'JetBrainsMono Nerd Font'
-# Optionnel: sélectionner foot dans les applications par défaut Plasma.
-kwriteconfig6 --file kdeglobals --group General --key TerminalApplication foot
 ```
+
+### Raccourcis façon Omarchy
+
+`~/.local/bin/kde-omarchy-keys` (dans le MANIFEST) applique les seuls écarts
+voulus par rapport aux réglages Plasma d'origine, et désigne foot comme terminal
+par défaut (`TerminalApplication`, `TerminalService`, `x-scheme-handler/terminal`).
+À lancer **dans une session Plasma**, après `restore.sh`; il est idempotent et
+`--dry-run` montre ce qui changerait.
+
+| Raccourci | Action | Équivalent Omarchy |
+|---|---|---|
+| Cmd + W | Fermer la fenêtre (Alt+F4 conservé) | `SUPER + W` |
+| Cmd + Entrée | Ouvrir foot | `SUPER + RETURN` |
+| Cmd + Maj + B | Firefox | `SUPER + SHIFT + B` |
+| Cmd + Maj + E | Dolphin (remplace le Cmd+E de Plasma) | `SUPER + SHIFT + F` |
+| Cmd + H/J/K/L | Focus Krohnkite | `SUPER + H/J/K/L` |
+| Cmd + Maj + H/J/K/L | Déplacer la fenêtre dans le pavage | `SUPER + SHIFT + …` |
+| Cmd + Maj + Entrée | Promouvoir en fenêtre maître | — |
+| Cmd + O | Vue d'ensemble KWin, délogée de Cmd+W | — |
+
+Déplacés pour libérer ces touches: « Aperçu du bureau » perd Cmd+D (Krohnkite y
+réduit la zone maître), le pavage manuel de KWin perd Cmd+Maj+H/J/K/L et le
+changement de fenêtre directionnel revient à Cmd+Alt+flèches.
+
+Un **lanceur d'application nouvellement enregistré** (Firefox, foot…) répond tout
+de suite à `invokeShortcut` et figure dans `kglobalshortcutsrc`, mais sa touche
+n'est captée qu'à la session suivante: KWin ne construit les composants
+« services » qu'au démarrage. Le script le signale; il n'y a rien à corriger, il
+faut rouvrir la session. Les actions déjà connues de KWin (fermeture, Krohnkite…)
+prennent effet immédiatement.
+
+Sur le clavier Apple, Cmd arrive comme Super/Meta: aucune option `altwin:` n'est
+posée dans `kxkbrc`, contrairement à quattro où `altwin:swap_lalt_lwin` fait
+mentir les noms de modificateurs.
+
+### Krohnkite (pavage dynamique)
+
+Script KWin en JavaScript (donc indépendant de l'architecture, rien à compiler
+sur aarch64). Absent des dépôts Fedora, installé à la main, version épingée:
+
+```bash
+curl -sSLo /tmp/krohnkite.kwinscript \
+  https://codeberg.org/anametologin/Krohnkite/releases/download/0.9.9.2/krohnkite-0.9.9.2-1d7fd74.kwinscript
+echo "42f7f66531d366c74b5fc860381da3517ccb4cdccd1f80c122fcab6e9a8fcf7e  /tmp/krohnkite.kwinscript" | sha256sum -c
+kpackagetool6 --type KWin/Script --install /tmp/krohnkite.kwinscript   # --upgrade pour une mise à jour
+kde-omarchy-keys   # active le script, pose les goutières et ses raccourcis
+```
+
+Le dépôt d'origine (`esjeon/krohnkite`) est arrêché à Plasma 5; c'est le fork
+`anametologin` qui suit KWin 6. `kde-omarchy-keys` s'occupe ensuite de
+`krohnkiteEnabled` et des goutières de 8 px dans `kwinrc`, puis demande à KWin de
+relire sa configuration (`qdbus-qt6 org.kde.KWin /KWin reconfigure`), sans quoi un
+script fraîchement activé reste inerte. Réglages fins: *Réglages système > Gestion
+des fenêtres > Scripts KWin > Krohnkite*. Si le script n'est pas installé,
+`kde-omarchy-keys` le signale et se contente des autres raccourcis.
+
+Le reste des réglages Plasma n'est **pas** sauvegardé: `kglobalshortcutsrc` est un
+fichier d'état que KGlobalAccel — hébergé dans `kwin_wayland` depuis Plasma 6 —
+réécrit depuis sa mémoire. Une édition faite en cours de session est ignorée puis
+écrasée; le script parle donc au démon par D-Bus (`org.kde.kglobalaccel`), et
+c'est le démon qui persiste. Les touches y sont des entiers
+`Qt::Key | Qt::KeyboardModifiers` (Meta = `0x10000000`).
 
 Foot conserve Ctrl+Shift+C/V, utilisables sur le clavier du MacBook. `TERM=foot`
 permet à tmux de reconnaître le terminal; pour une machine SSH sans son terminfo:
@@ -238,8 +299,10 @@ faire vérifier/relabeler les chemins concernés avec `restorecon`, pas désacti
 SELinux.
 
 `STATE` et `packages.installed.txt` sont préparés avant publication. La liste RPM
-utilise une requête DNF locale (`--installed --userinstalled`, sans réseau), avec
-un paquet par ligne; un échec ne tronque pas l'ancienne liste.
+utilise une requête DNF locale (`--cacheonly repoquery --userinstalled`, sans réseau),
+avec un paquet par ligne; un échec ne tronque pas l'ancienne liste.
+`--userinstalled` sélectionne déjà des paquets installés; DNF5 interdit de le
+combiner avec `--installed`.
 
 `--commit` refuse un index Git déjà rempli et ne stage que les chemins du MANIFEST
 et les métadonnées: ni `quattro/`, ni `macos/`, ni des scripts modifiés par ailleurs.

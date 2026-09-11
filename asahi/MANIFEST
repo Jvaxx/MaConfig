@@ -38,6 +38,12 @@ shared:.config/git/config
 # --- Vidéo (sortie CPU Wayland; à revoir quand le GPU sera utilisable) ---
 .config/mpv/mpv.conf
 
+# --- Plasma / KWin ---
+# Les réglages Plasma vivent dans des fichiers d'état réécrits par la session
+# (kglobalshortcutsrc est réécrit depuis la mémoire de kwin), donc ils ne sont
+# pas sauvegardés tels quels: ce script réapplique nos seuls écarts.
+.local/bin/kde-omarchy-keys
+
 # --- Clavier ---
 # Aucun layout XKB custom installé. Les réglages Plasma actuels sont conservés;
 # vérifier disposition/variante et assigner une touche Compose si nécessaire.
