@@ -114,7 +114,7 @@ Vérifier que `~/.local/bin` est dans le `PATH` et que les fichiers sont `+x`.
   `omarchy.active-window` (`maxWidth: 400`)
 - **centre** : `omarchy.indicators`, `omarchy.clock`, `omarchy.keyboard-layout`,
   `omarchy.system-update`
-- **droite** : `tray`, `io.github.thisisgm.omapods`, `agents`, `bluetooth`,
+- **droite** : `jvz.tray` (voir plus bas), `io.github.thisisgm.omapods`, `agents`, `bluetooth`,
   `network`, `audio`, `monitor`, `power`
 - horloge : `format = "dd dddd HH:mm"`, `formatAlt = "d MMMM 'W'ww yyyy"`,
   `birthYear = 2002`, `lifeExpectancy = 85`
@@ -128,6 +128,15 @@ Vérifier que `~/.local/bin` est dans le `PATH` et que les fichiers sont `+x`.
   puis renommé). Les fichiers sont sauvegardés ici en entier ; il suffit de les
   recopier dans `~/.config/omarchy/plugins/jvz.menu/`. Le `manifest.json` garde
   `omarchy.clonedFrom = "omarchy.menu"`.
+- **`jvz.tray`** — clone maison de `omarchy.tray` (`omarchy plugin clone omarchy.tray`).
+  Tiroir de la zone de notification toujours ouvert : dans `Tray.qml`, `expanded`
+  est forcé à `true`, les `HoverHandler` d'expansion sont supprimés et le chevron
+  `‹` (`expandIcon`) est masqué (`visible: false`, extent 0) dans les deux
+  dispositions (horizontale et verticale). Conséquence : la popup « Tray icons »
+  (pin/hide), ouverte par clic droit sur le chevron, n'est plus atteignable —
+  pour masquer une icône, ajouter son id au tableau `"hidden"` de l'entrée
+  `jvz.tray` dans `shell.json`. Retour au comportement stock : supprimer
+  `~/.config/omarchy/plugins/jvz.tray/` et remettre `omarchy.tray` dans la barre.
 - **`io.github.thisisgm.omapods`** — externe, `https://github.com/thisisgm/omarchy-pods`.
   Recloné automatiquement par `restore.sh`. Contrôle les AirPods
   (binaires `librepods` / `librepods-ctl` dans `~/.local/bin`, non sauvegardés ici).

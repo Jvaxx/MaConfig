@@ -43,6 +43,13 @@
 # --- Menu custom (plugin cloné depuis omarchy.menu) ---
 .config/omarchy/plugins/jvz.menu
 
+# --- Tray custom (plugin cloné depuis omarchy.tray) ---
+# Tiroir toujours ouvert : `expanded` forcé à true, HoverHandler retiré et
+# chevron `‹` masqué. Conséquence : la popup de gestion (pin/hide), ouverte par
+# un clic droit sur le chevron, n'est plus accessible ; masquer une icône se
+# fait en ajoutant son id à "hidden" sur l'entrée jvz.tray de shell.json.
+.config/omarchy/plugins/jvz.tray
+
 # --- Plugin maison : indicateur de position sur le layout scrolling ---
 # Publié dans son propre dépôt (github.com/Jvaxx/omarchy-scrolling-position),
 # donc PAS listé ici : sync.sh l'enregistre tout seul dans external-plugins.txt
