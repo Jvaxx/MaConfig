@@ -41,4 +41,5 @@ yabai -m config normal_window_opacity 0.9
 yabai -m rule --add app="^System Settings$" manage=off
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^LocalSend$" manage=off
-yabai -m rule --add app="^Activity Monitor$" manage=off
+# Activity Monitor / Moniteur d’activité : fenêtre flottante, hors du tiling.
+yabai -m rule --add label=activity-monitor-float app="^(Activity Monitor|Moniteur d.*activit.*)$" manage=off
