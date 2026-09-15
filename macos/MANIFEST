@@ -1,0 +1,12 @@
+# Chemins relatifs à $HOME ; shared: utilise ../shared/home.
+# Liste explicite : jamais de clés, tokens, historiques ou profils navigateur.
+.zshrc
+.zprofile
+.gitconfig
+.config/ghostty
+.config/skhd
+.config/yabai
+.config/karabiner/karabiner.json
+shared:.config/nvim
+shared:.config/starship.toml
+shared:.config/tmux/tmux.conf

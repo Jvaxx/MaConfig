@@ -1,0 +1,100 @@
+tap "anomalyco/tap"
+tap "asmvik/formulae", "https://github.com/asmvik/homebrew-formulae.git"
+tap "homebrew/services"
+tap "rakalex/mac-brightnessctl"
+tap "steipete/tap"
+# Version manager for neovim
+brew "bob"
+# Resource monitor. C++ version and continuation of bashtop and bpytop
+brew "btop"
+# Software library to render fonts
+brew "freetype"
+# Cross-platform make
+brew "cmake"
+# Low-level access to audio, keyboard, mouse, joystick, and graphics
+brew "sdl3"
+# SDL2 compatibility layer that uses SDL3 behind the scenes
+brew "sdl2-compat"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
+# Play, record, convert, and stream audio and video
+brew "ffmpeg@6"
+# GNU debugger
+brew "gdb"
+# C++ mathematics library for graphics software
+brew "glm"
+# Render markdown on the CLI
+brew "glow"
+# GNU Privacy Guard (OpenPGP)
+brew "gnupg"
+# Open source programming language to build simple/reliable/efficient software
+brew "go"
+# Language server for the Go language
+brew "gopls"
+# Enhanced version of john, a UNIX password cracker
+brew "john-jumbo"
+# Clone of ls with colorful output, file type icons, and more
+brew "lsd"
+# Apple Silicon Monitor Top written in Go Lang
+brew "mactop"
+# Feature-rich command-line audio/video downloader
+brew "yt-dlp"
+# Media player based on MPlayer and mplayer2
+brew "mpv"
+# Port scanning utility for large networks
+brew "nmap"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
+# Create, run, and share large language models (LLMs)
+brew "ollama"
+# Development kit for the Java programming language
+brew "openjdk"
+# Development kit for the Java programming language
+brew "openjdk@17"
+# Development kit for the Java programming language
+brew "openjdk@21"
+# Execute binaries from Python packages in isolated environments
+brew "pipx"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
+# Messaging and streaming broker
+brew "rabbitmq"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# Cross-shell prompt for astronauts
+brew "starship"
+# Internet file retriever
+brew "wget"
+# Fish shell like syntax highlighting for zsh
+brew "zsh-syntax-highlighting"
+# Lightning-fast macOS screenshots & AI vision analysis
+brew "steipete/tap/peekaboo", trusted: true
+# Menu bar tool to limit maximum charging percentage
+cask "aldente"
+# Multi-track audio editor and recorder
+cask "audacity"
+# OpenAI's official ChatGPT desktop app
+cask "chatgpt"
+# Voice and text chat software
+cask "discord"
+# Terminal emulator that uses platform-native UI and GPU acceleration
+cask "ghostty"
+# Keyboard customiser
+cask "karabiner-elements"
+# Open-source cross-platform alternative to AirDrop
+cask "localsend"
+# Clipboard manager
+cask "maccy"
+# Minimal installer for conda specific to conda-forge
+cask "miniforge"
+# Smooths scrolling and set mouse scroll directions independently
+cask "mos"
+# Archive manager for data compression and backups
+cask "rar"
+# Move and resize windows using keyboard shortcuts or snap areas
+cask "rectangle"
+# RSS and Atom reader
+cask "vienna"
+# Multimedia player
+cask "vlc"
+npm "@earendil-works/pi-coding-agent"

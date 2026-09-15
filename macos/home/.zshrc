@@ -1,4 +1,4 @@
-export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/bob/nvim-bin:$PATH"
 export EDITOR=nvim
 export VISUAL="$EDITOR"
 
@@ -38,11 +38,18 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 # Coloration synthaxique après avoir ajouté zsh-syntax-highlighting par homebrew
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if command -v brew >/dev/null 2>&1; then
+    _highlighting="$(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+    [[ ! -r $_highlighting ]] || source "$_highlighting"
+    unset _highlighting
+fi
 
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/jvz/.lmstudio/bin"
+export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
-eval "$(starship init zsh)"
+command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
+
+# Secrets et réglages propres à la machine : jamais sauvegardés.
+[[ ! -r "$HOME/.zshrc.local" ]] || source "$HOME/.zshrc.local"

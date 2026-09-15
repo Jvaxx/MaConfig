@@ -9,3 +9,6 @@ __pycache__/
 /asahi/home/.bashrc.local
 /asahi/home/.bash_profile.local
 /asahi/home/.bashrc.d/
+/macos/home/.zshrc.local
+/macos/home/.zprofile.local
+.DS_Store

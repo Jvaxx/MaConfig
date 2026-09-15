@@ -5,7 +5,7 @@ MaConfig/
 ├── shared/home/   configs identiques sur toutes les machines
 ├── quattro/       Arch + Hyprland + Omarchy   (FIXEJVZ, x86_64)
 ├── asahi/         Fedora Asahi Remix + KDE    (MacBook Pro M3 Pro, aarch64)
-└── macos/         macOS — historique (yabai, skhd, ghostty)
+└── macos/         macOS (Zsh, yabai/skhd, Ghostty, Karabiner, Homebrew)
 ```
 
 Chaque hôte a son `MANIFEST`, son `restore.sh` et son `sync.sh`. Une entrée de
@@ -23,7 +23,9 @@ peut aller dans `shared/` — nvim, tmux, starship, git, les fragments shell et
 les règles Compose. Les layouts XKB restent locaux à `quattro/`;
 ils ne sont ni partagés ni installés sur Asahi.
 
-Mise en route d'une machine : `quattro/RESTORE.md` ou `asahi/RESTORE.md`.
+Mise en route d'une machine : `quattro/RESTORE.md`, `asahi/RESTORE.md`
+ou `macos/RESTORE.md`. Sur macOS, seuls Neovim, tmux et Starship sont partagés ;
+Git et Zsh restent locaux (les helpers Git Linux ne sont pas portables).
 Ce qui a été élagué au portage vers le Mac : `asahi/DROPPED.md`.
 
 Asahi cible Fedora 44+ / aarch64. Ses scripts proposent `--dry-run`, conservent
