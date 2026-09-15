@@ -1,4 +1,6 @@
-# Chemins relatifs à $HOME ; shared: utilise ../shared/home.
+# Chemins relatifs à $HOME, liés au dépôt ; shared: utilise ../shared/home.
+# copy: conserve restore/sync par copie pour les fichiers réécrits par une app.
+# Préfixes combinables : copy:shared:chemin.
 # Liste explicite : jamais de clés, tokens, historiques ou profils navigateur.
 .zshrc
 .zprofile
@@ -6,7 +8,7 @@
 .config/ghostty
 .config/skhd
 .config/yabai
-.config/karabiner/karabiner.json
+copy:.config/karabiner/karabiner.json
 shared:.config/nvim
 shared:.config/starship.toml
 shared:.config/tmux/tmux.conf

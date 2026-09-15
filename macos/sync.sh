@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# $HOME -> dépôt. Faire un pull puis restore avant le premier sync !
+# Vérifier les liens, copier les exceptions, exporter Brewfile et STATE.
+# Ne jamais importer une copie locale à la place d'un lien manquant.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 COMMIT=0
@@ -11,8 +12,23 @@ for arg in "$@"; do
   esac
 done
 
+# Tout vérifier avant la moindre écriture (y compris exports et commit).
+INVALID=0
 while IFS= read -r line || [[ -n $line ]]; do
   entry "$line" || continue
+  if [[ $mode == link ]] && ! linked_entry; then
+    echo "Lien absent/incorrect: $HOME/$rel -> $repo" >&2
+    INVALID=1
+  fi
+done < "$HERE/MANIFEST"
+if (( INVALID )); then
+  echo "Comparer les configs locales au dépôt, puis lancer macos/restore.sh." >&2
+  exit 1
+fi
+
+while IFS= read -r line || [[ -n $line ]]; do
+  entry "$line" || continue
+  [[ $mode == copy ]] || continue
   src="$HOME/$rel"
   if [[ ! -e $src ]]; then
     echo "  absent (sauvegarde conservée): $rel" >&2

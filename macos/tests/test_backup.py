@@ -35,10 +35,13 @@ done
         self.env = dict(os.environ, HOME=str(self.home),
                         PATH=f"{self.bin}:/usr/bin:/bin:/usr/sbin:/sbin")
         (self.mac / "MANIFEST").write_text(
-            "# test\n.zshrc\nshared:.config/nvim\nLibrary/Application Support/test/config\n")
+            "# test\n.zshrc\nshared:.config/nvim\nLibrary/Application Support/test/config\n"
+            "copy:.config/karabiner/karabiner.json\ncopy:shared:.config/copy-test\n")
         self.put(self.mac / "home/.zshrc", "remote shell\n")
         self.put(self.repo / "shared/home/.config/nvim/init.lua", "remote nvim\n")
         self.put(self.mac / "home/Library/Application Support/test/config", "space\n")
+        self.put(self.mac / "home/.config/karabiner/karabiner.json", "{}\n")
+        self.put(self.repo / "shared/home/.config/copy-test/config", "copy\n")
 
     def put(self, path, text):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,7 +59,7 @@ done
     def test_dry_runs_do_not_write(self):
         before = sorted(str(p) for p in self.base.rglob("*"))
         self.run_script("restore.sh", "--dry-run")
-        self.run_script("sync.sh", "--dry-run", "--commit")
+        self.run_script("sync.sh", "--dry-run", "--commit", ok=False)
         self.run_script("defaults.sh", "--dry-run")
         self.assertEqual(before, sorted(str(p) for p in self.base.rglob("*")))
 
@@ -72,17 +75,17 @@ done
         self.assertEqual((self.home / "Library/Application Support/test/config")
                          .read_text(), "space\n")
 
-    def test_sync_shared_exclusions_and_deletion(self):
+    def test_sync_copy_exclusions_and_deletion(self):
         self.run_script("restore.sh", "--yes")
-        self.put(self.home / ".config/nvim/init.lua", "edited\n")
-        self.put(self.home / ".config/nvim/.git/config", "private\n")
-        self.put(self.home / ".config/nvim/.DS_Store", "cache\n")
-        self.put(self.home / ".config/nvim/init.lua.bak.123", "old\n")
-        self.put(self.repo / "shared/home/.config/nvim/stale.lua", "stale\n")
+        self.put(self.home / ".config/copy-test/config", "edited\n")
+        self.put(self.home / ".config/copy-test/.git/config", "private\n")
+        self.put(self.home / ".config/copy-test/.DS_Store", "cache\n")
+        self.put(self.home / ".config/copy-test/config.bak.123", "old\n")
+        self.put(self.repo / "shared/home/.config/copy-test/stale", "stale\n")
         self.run_script("sync.sh")
-        shared = self.repo / "shared/home/.config/nvim"
-        self.assertEqual(sorted(p.name for p in shared.iterdir()), ["init.lua"])
-        self.assertEqual((shared / "init.lua").read_text(), "edited\n")
+        shared = self.repo / "shared/home/.config/copy-test"
+        self.assertEqual(sorted(p.name for p in shared.iterdir()), ["config"])
+        self.assertEqual((shared / "config").read_text(), "edited\n")
         self.assertTrue((self.mac / "Brewfile").exists())
         self.assertTrue((self.mac / "STATE").exists())
 
@@ -111,12 +114,22 @@ done
         self.run_script("restore.sh", "--yes", ok=False)
         self.assertEqual(list(self.home.iterdir()), [])
 
-    def test_missing_local_preserves_backup(self):
+    def test_missing_copy_source_preserves_backup(self):
+        self.run_script("restore.sh", "--yes")
+        (self.home / ".config/karabiner/karabiner.json").unlink()
         self.run_script("sync.sh")
+        self.assertEqual((self.mac / "home/.config/karabiner/karabiner.json").read_text(), "{}\n")
+
+    def test_sync_refuses_uninstalled_links_without_writes(self):
+        self.put(self.home / ".zshrc", "local\n")
+        self.run_script("sync.sh", "--commit", ok=False)
         self.assertEqual((self.mac / "home/.zshrc").read_text(), "remote shell\n")
+        self.assertFalse((self.mac / "Brewfile").exists())
+        self.assertFalse((self.mac / "STATE").exists())
 
     def test_invalid_paths_and_options(self):
-        for entry in ("../outside", "shared:/absolute", ".config/../../outside"):
+        for entry in ("../outside", "shared:/absolute", ".config/../../outside",
+                      "copy:../outside", "copy:shared:/absolute", "shared:", "copy:"):
             (self.mac / "MANIFEST").write_text(entry + "\n")
             self.run_script("restore.sh", "--yes", ok=False)
             self.run_script("sync.sh", ok=False)
@@ -125,13 +138,13 @@ done
 
     def test_failed_copy_preserves_existing_destination(self):
         self.run_script("restore.sh", "--yes")
-        self.put(self.home / ".config/nvim/init.lua", "local edit\n")
+        self.put(self.home / ".config/copy-test/config", "local edit\n")
         rsync = self.bin / "rsync"
         rsync.write_text("#!/bin/bash\nexit 1\n")
         rsync.chmod(0o755)
         self.run_script("sync.sh", ok=False)
-        self.assertEqual((self.repo / "shared/home/.config/nvim/init.lua")
-                         .read_text(), "remote nvim\n")
+        self.assertEqual((self.repo / "shared/home/.config/copy-test/config")
+                         .read_text(), "copy\n")
         self.assertEqual(list(self.repo.rglob(".maconfig-stage-*")), [])
 
     def test_commit_does_not_include_other_staged_files(self):
@@ -152,6 +165,47 @@ done
         self.assertEqual(git("diff", "--cached", "--name-only").strip(), "unrelated.txt")
         self.assertNotIn("unrelated.txt", git("ls-tree", "--name-only", "HEAD"))
         self.assertIn("macos: sync config", git("log", "-1", "--format=%s"))
+
+    def test_links_are_live_and_restore_is_idempotent(self):
+        self.run_script("restore.sh", "--yes")
+        for rel in (".zshrc", ".config/nvim", "Library/Application Support/test/config"):
+            self.assertTrue((self.home / rel).is_symlink())
+        self.assertFalse((self.home / ".config/karabiner/karabiner.json").is_symlink())
+        self.put(self.home / ".zshrc", "local edit\n")
+        self.assertEqual((self.mac / "home/.zshrc").read_text(), "local edit\n")
+        self.put(self.repo / "shared/home/.config/nvim/init.lua", "repo edit\n")
+        self.assertEqual((self.home / ".config/nvim/init.lua").read_text(), "repo edit\n")
+        self.run_script("restore.sh", "--yes")
+        self.assertEqual(list(self.home.glob(".zshrc.bak.*")), [])
+        self.assertEqual(list((self.home / ".config").glob("nvim.bak.*")), [])
+        self.run_script("sync.sh", "--dry-run")
+        self.assertFalse((self.mac / "STATE").exists())
+
+    def test_sync_rejects_replaced_or_broken_link_before_copying(self):
+        self.run_script("restore.sh", "--yes")
+        self.put(self.home / ".config/karabiner/karabiner.json", "local edit\n")
+        link = self.home / ".zshrc"
+        for target in (None, self.base / "missing", self.base / "external"):
+            link.unlink()
+            if target is None:
+                link.write_text("not a link\n")
+            else:
+                if target.name == "external":
+                    target.write_text("external\n")
+                link.symlink_to(target)
+            self.run_script("sync.sh", ok=False)
+            self.assertEqual((self.mac / "home/.config/karabiner/karabiner.json")
+                             .read_text(), "{}\n")
+            self.assertFalse((self.mac / "STATE").exists())
+
+    def test_failed_link_creation_restores_original(self):
+        self.put(self.home / ".zshrc", "local\n")
+        ln = self.bin / "ln"
+        ln.write_text("#!/bin/bash\nexit 1\n")
+        ln.chmod(0o755)
+        self.run_script("restore.sh", "--yes", ok=False)
+        self.assertEqual((self.home / ".zshrc").read_text(), "local\n")
+        self.assertFalse((self.home / ".zshrc").is_symlink())
 
     def test_executable_modes_preserved(self):
         (self.mac / "home/.zshrc").chmod(0o755)

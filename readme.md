@@ -26,6 +26,9 @@ ils ne sont ni partagés ni installés sur Asahi.
 Mise en route d'une machine : `quattro/RESTORE.md`, `asahi/RESTORE.md`
 ou `macos/RESTORE.md`. Sur macOS, seuls Neovim, tmux et Starship sont partagés ;
 Git et Zsh restent locaux (les helpers Git Linux ne sont pas portables).
+Sur macOS, `restore.sh` installe des liens vers le dépôt ; `sync.sh` vérifie les
+liens et exporte les inventaires. Les entrées `copy:` (Karabiner) gardent le
+fonctionnement par copie. Les scripts Linux restent inchangés.
 Ce qui a été élagué au portage vers le Mac : `asahi/DROPPED.md`.
 
 Asahi cible Fedora 44+ / aarch64. Ses scripts proposent `--dry-run`, conservent

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Dépôt -> $HOME. Aucun paquet installé ni service redémarré.
+# Installer les liens dépôt -> $HOME (copies pour les exceptions copy:).
+# Aucun paquet installé ni service redémarré.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 YES=0
@@ -18,12 +19,16 @@ while IFS= read -r line || [[ -n $line ]]; do
 done < "$HERE/MANIFEST"
 
 if (( ! DRY && ! YES )); then
-  read -r -p "Restaurer vers $HOME (anciens fichiers en *.bak.$STAMP) ? [y/N] " answer
+  read -r -p "Installer les liens/configs vers $HOME (anciens fichiers en *.bak.$STAMP) ? [y/N] " answer
   [[ $answer == y || $answer == Y ]] || exit 0
 fi
 while IFS= read -r line || [[ -n $line ]]; do
   entry "$line" || continue
-  copy_entry "$repo" "$HOME/$rel" yes
+  if [[ $mode == copy ]]; then
+    copy_entry "$repo" "$HOME/$rel" yes
+  else
+    link_entry
+  fi
 done < "$HERE/MANIFEST"
 
 echo "Terminé. Aucun paquet installé, service relancé ou réglage système appliqué."

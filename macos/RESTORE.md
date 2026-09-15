@@ -1,10 +1,13 @@
 # Sauvegarde / restauration macOS
 
-Même principe que Quattro : `MANIFEST`, `home/`, `shared/home/`, deux scripts.
+Le dépôt contient les configs actives : `restore.sh` installe des liens
+symboliques de `$HOME` vers `home/` ou `shared/home/`. Contrairement aux hôtes
+Linux, il n'y a plus de copie aller-retour pour ces entrées. Les entrées
+`copy:` restent gérées par copie (Karabiner, dont l'app réécrit le JSON).
 Compatible avec le Bash 3.2 et le rsync fournis par macOS. Pas de bootstrap,
 services automatiques, sudo, installation de paquets ou changement de SIP.
 
-## Restaurer (le dépôt fait foi)
+## Installer les liens / migrer depuis les copies (le dépôt fait foi)
 
 ```bash
 cd ~/Documents/MaConfig
@@ -24,38 +27,58 @@ git merge --ff-only FETCH_HEAD
 Cela permet de lire le dépôt, pas de pousser : configurer ensuite une clé SSH
 GitHub ou une authentification HTTPS pour `git push`.
 
-Les fichiers **et dossiers** existants sont déplacés à côté de l'original en
-`*.bak.<date>.<pid>` avant remplacement. Les anciens fichiers absents du dépôt
-ne restent donc pas dans les dossiers restaurés. Les liens vers le dépôt sont
-conservés ; les autres liens (même cassés) sont sauvegardés puis remplacés par
-une copie. Aucune sauvegarde n'est effacée automatiquement.
+Avant la première installation, **comparer les copies locales au dépôt** et
+reporter manuellement les changements à garder dans `macos/home/` ou
+`shared/home/`. Restore ne fusionne rien : la version du dépôt devient active.
 
-Sur cette migration, les versions GitHub de Zsh, Ghostty, skhd, yabai et des
-configs partagées ont priorité sur les versions locales. Les nouveaux fichiers
-(`.zprofile`, `.gitconfig`, Karabiner, inventaire Homebrew) viennent de ce Mac.
-Zsh a seulement été adapté pour les chemins `$HOME`, les outils optionnels et
-les overrides locaux. Faire **restore avant sync** sur une machine en retard,
-sinon ses anciennes configs écraseraient les versions du dépôt (y compris shared).
+Les fichiers **et dossiers** existants sont déplacés à côté de l'original en
+`*.bak.<date>.<pid>` avant remplacement par un lien absolu. Les liens déjà
+corrects sont conservés ; les autres liens (même cassés) sont sauvegardés sans
+toucher à leur cible. Pour `copy:`, une copie est installée à la place du lien.
+Toutes les sources sont vérifiées avant installation. Aucune sauvegarde n'est
+effacée automatiquement. Pour revenir à une copie locale, retirer uniquement
+le lien puis remettre sa sauvegarde à sa place.
+
+Garder le dépôt à un emplacement stable : les liens en dépendent. Après un
+déplacement, relancer restore depuis le nouvel emplacement. Un `git pull`,
+changement de branche ou reset modifie désormais les configs actives sans étape
+« apply » (sauf `copy:`). Résoudre les conflits avant de recharger les apps.
 Les scripts ne font ni pull ni push et ne résolvent pas les conflits Git.
 
 ## Sauvegarder après une modification
 
 ```bash
 ./macos/sync.sh --dry-run
-./macos/sync.sh               # $HOME -> dépôt + Brewfile + STATE
+./macos/sync.sh               # vérifier les liens + copier les exceptions + exports
 # Relire les changements, particulièrement ceux dans shared/ :
 git diff HEAD -- macos shared
 ./macos/sync.sh --commit      # optionnel ; commit limité à macos et shared/home
 git push
 ```
 
-Une source locale absente est signalée et sa dernière sauvegarde conservée.
-Pour retirer une config volontairement, retirer aussi son entrée du MANIFEST et
-sa copie du dépôt. Les dossiers sont recopiés sans `.git`, `.DS_Store` ou
-`*.bak.*`. Les liens internes aux dossiers sont conservés : vérifier qu'ils sont
-portables avant de commiter. Pas de synchronisation concurrente.
+Les modifications des configs liées sont **immédiatement dans le dépôt** :
+sync ne les recopie pas. Il refuse tout lien absent, cassé ou remplacé avant
+la moindre copie, export ou commit ; comparer puis relancer restore pour réparer.
+Le mode dry-run effectue aussi cette validation et échoue si les liens manquent.
+Les changements ne sont sauvegardés dans Git qu'après commit ; pousser sur un
+remote pour disposer d'une copie indépendante.
 
-Ajouter un chemin relatif à `$HOME` au `MANIFEST` (espaces acceptés), puis sync.
+Pour les exceptions `copy:`, sync importe la copie locale ; une source locale
+absente est signalée et sa dernière sauvegarde conservée. Restore fait l'inverse
+avec sauvegarde. Les copies de dossiers excluent `.git`, `.DS_Store`, `*.bak.*`
+et `.maconfig-stage-*`. Ces filtres **ne s'appliquent pas aux dossiers liés** :
+tout fichier généré par une app y arrive directement. Vérifier `git status`,
+les fichiers non suivis et les secrets avant `--commit` (qui ajoute tout dans
+`macos` et `shared/home`). Les liens internes doivent rester portables.
+Pas d'exécution concurrente des scripts.
+
+Pour ajouter une config, placer d'abord son contenu dans `macos/home/` (ou
+`shared/home/`), ajouter son chemin relatif à `$HOME` au `MANIFEST` (espaces
+acceptés), puis lancer restore. `copy:chemin` conserve le mécanisme de copie ;
+`copy:shared:chemin` combine les deux préfixes. Pour retirer une config liée,
+retirer son lien ou le remplacer par une copie indépendante **avant** de supprimer
+l'entrée du MANIFEST et la source du dépôt.
+
 `shared:` partage les modifications avec Linux : Neovim, Starship et tmux.
 Les fichiers Git restent locaux : le fichier partagé appelle `/usr/bin/gh`,
 inexistant sur macOS. Les fragments Bash et XCompose Linux ne sont pas installés.
