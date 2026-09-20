@@ -1,6 +1,8 @@
 # Fichiers/dossiers sauvegardés. Chemins relatifs à $HOME.
 # Une entrée par ligne. Lignes vides et commençant par # ignorées.
-# Ajouté ici = sauvegardé par sync.sh et restauré par restore.sh.
+# Par défaut : restore.sh crée un symlink vers le dépôt, sync.sh le vérifie.
+# copy: garde une copie locale (logiciels réécrivant leurs configs).
+# Pour ajouter un fichier : comparer/importer dans home/ AVANT restore.sh.
 #
 # Deux sources possibles par entrée :
 #   .config/foo          -> ./home/.config/foo          (propre à cet hôte)
@@ -37,7 +39,8 @@
 .config/systemd/user/bbox-mic-bridge.service
 
 # --- Omarchy shell ---
-.config/omarchy/shell.json
+# Les commandes Omarchy remplacent shell.json par rename : casseraient un lien.
+copy:.config/omarchy/shell.json
 .config/omarchy/shell.toml
 
 # --- Menu custom (plugin cloné depuis omarchy.menu) ---
@@ -105,7 +108,8 @@ shared:.config/nvim
 # --- Outils CLI (modifiés vs défauts) ---
 # btop reste local : color_theme = "current" pointe sur le symlink de thème
 # Omarchy, qui n'existe que sur cette machine.
-.config/btop/btop.conf
+# btop sauvegarde automatiquement ses préférences à la fermeture.
+copy:.config/btop/btop.conf
 shared:.config/starship.toml
 shared:.config/tmux/tmux.conf
 shared:.config/git/config

@@ -29,6 +29,9 @@
           "id": "omarchy.workspaces"
         },
         {
+          "id": "blakestarling.workspace-presets"
+        },
+        {
           "id": "io.github.jvaxx.scrolling-position",
           "mode": "map"
         },

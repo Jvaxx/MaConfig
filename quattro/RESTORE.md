@@ -12,9 +12,18 @@ cd ~/Documents/MaConfig/quattro
 ./restore.sh             # restaurer (sauvegarde l'existant en *.bak.<timestamp>)
 ```
 
-`restore.sh` recopie l'arbre `home/` dans `$HOME`, reclone les plugins shell
-externes listés dans `external-plugins.txt`, puis relance Hyprland, le shell
-Omarchy et les terminaux.
+`restore.sh` installe des **symlinks** de `$HOME` vers les entrées de `home/`,
+reclone les plugins shell externes listés dans `external-plugins.txt`, puis
+recharge les services user, Hyprland, le shell Omarchy et les terminaux.
+`--no-reload` installe sans relancer les applications. Les liens déjà corrects
+sont conservés ; chaque fichier/dossier remplacé est sauvegardé en `.bak.*`.
+Exception : les anciens plugins vont dans `~/.local/state/maconfig/backups/`
+pour éviter que le shell découvre leurs sauvegardes comme plugins doublons.
+**Ne pas déplacer/supprimer le dépôt**, qui devient la config active.
+
+Exceptions `copy:` : `shell.json` (les commandes Omarchy le remplacent par
+renommage atomique) et `btop.conf` (préférences réécrites par l'application).
+Les plugins externes gardent leurs propres dépôts, sans lien vers MaConfig.
 
 Certaines entrées viennent de `../shared/home` et non de `home/` : ce sont
 celles préfixées `shared:` dans le MANIFEST, partagées avec l'hôte `asahi/`
@@ -24,14 +33,25 @@ celles préfixées `shared:` dans le MANIFEST, partagées avec l'hôte `asahi/`
 
 ```bash
 cd ~/Documents/MaConfig/quattro
-./sync.sh            # ~/ -> repo
+./sync.sh --dry-run  # vérifier sans écrire
+./sync.sh            # vérifier les liens, copier les exceptions, exporter les inventaires
 ./sync.sh --commit   # + commit git
 git push
 ```
 
-Pour ajouter/retirer un fichier suivi : éditer `MANIFEST` (chemins relatifs à `$HOME`).
-Préfixer par `shared:` pour ranger l'entrée dans l'arbre partagé plutôt que dans
-`home/`.
+Les modifications des fichiers liés sont immédiatement visibles dans `git diff`.
+`sync.sh` refuse toute écriture si un lien est absent/remplacé : comparer alors
+la copie locale au dépôt, fusionner les changements utiles, puis relancer
+`restore.sh`. Il ne réimporte jamais silencieusement une ancienne copie locale.
+Avant un pull, synchroniser les exceptions puis commiter/stasher les changements.
+
+Pour ajouter un fichier : le copier d'abord dans `home/` (ou `../shared/home/`),
+ajouter son chemin relatif à `$HOME` au `MANIFEST`, puis lancer `restore.sh`.
+Préfixer par `shared:` pour l'arbre partagé, `copy:` pour une exception
+(`copy:shared:` est également accepté). Comparer les copies avant restauration :
+le dépôt est prioritaire, les anciennes copies sont sauvegardées, pas fusionnées.
+
+Tests isolés : `python3 -B -m unittest discover -s quattro/tests -v`.
 
 ## Structure
 
@@ -40,7 +60,7 @@ Préfixer par `shared:` pour ranger l'entrée dans l'arbre partagé plutôt que 
 | `MANIFEST` | liste des fichiers suivis (`shared:` = vient de `../shared/home`) |
 | `home/` | fichiers propres à cet hôte, arborescence `$HOME` |
 | `../shared/home/` | fichiers partagés avec les autres hôtes, même arborescence |
-| `sync.sh` / `restore.sh` | backup / restauration |
+| `sync.sh` / `restore.sh` / `lib.sh` | vérification + exports / installation des liens |
 | `STATE` | version Omarchy + date du dernier sync |
 | `external-plugins.txt` | plugins shell clonés depuis GitHub (`id<TAB>url`) |
 | `packages.txt` | `pacman -Qqe` au dernier sync — **référence seule**, `restore.sh` n'installe rien |
@@ -111,6 +131,7 @@ Vérifier que `~/.local/bin` est dans le `PATH` et que les fichiers sont `+x`.
 ## 5. Barre / shell Omarchy — `~/.config/omarchy/shell.json`
 
 - **gauche** : `jvz.menu` (voir plus bas), `omarchy.workspaces`,
+  `blakestarling.workspace-presets`, `io.github.jvaxx.scrolling-position`,
   `omarchy.active-window` (`maxWidth: 400`)
 - **centre** : `omarchy.indicators`, `omarchy.clock`, `omarchy.keyboard-layout`,
   `omarchy.system-update`
