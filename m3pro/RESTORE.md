@@ -74,6 +74,7 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 | règles `render_unfocused` Factorio/KSP | jeux x86_64, rien ne les fait tourner ici |
 | `monitors.lua` du fixe | deux écrans HDMI propres au fixe |
 | kitty | non installé ici |
+| voxtype (dictée F9), OBS Studio | pas voulus sur cette machine |
 | `omarchy/notes`, `extensions/` | notes du serveur média ; les extensions de menu de Quattro sont les exemples stock |
 | conda, grok, LM Studio dans `.bashrc` | non installés (LM Studio n'existe pas en aarch64) |
 | plugins `blakestarling.workspace-presets`, `io.github.jvaxx.scrolling-position` | pas encore installés : plugins externes, à relire avant (règle 6 de `b-install`), voir plus bas |

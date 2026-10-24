@@ -30,6 +30,7 @@ cups-pk-helper
 ddcutil
 dhcpcd
 direnv
+diskonaut
 docker
 docker-buildx
 docker-compose
@@ -51,6 +52,7 @@ foot
 fzf
 ghostty
 git
+glow
 gnome-disk-utility
 gnome-themes-extra
 gpu-screen-recorder
@@ -164,6 +166,7 @@ udiskie
 ufw
 ufw-docker
 usage
+uv
 vulkan-asahi
 vulkan-headers
 vulkan-tools
