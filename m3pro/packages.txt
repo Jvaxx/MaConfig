@@ -29,6 +29,7 @@ cups
 cups-pk-helper
 ddcutil
 dhcpcd
+direnv
 docker
 docker-buildx
 docker-compose
@@ -48,6 +49,7 @@ fd
 ffmpegthumbnailer
 foot
 fzf
+ghostty
 git
 gnome-disk-utility
 gnome-themes-extra
@@ -138,6 +140,7 @@ rust-bindgen
 rustup
 slurp
 socat
+songrec
 speakersafetyd
 spirv-headers
 spirv-llvm-translator

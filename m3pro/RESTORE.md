@@ -92,7 +92,8 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 
 ## Reste à faire (avec `b-install`)
 
-1. Paquets (préflight propre, aarch64, sans mise à jour partielle) :
+1. Paquets requis par cette config (installés le 2026-10-24 ; à refaire
+   après une réinstallation) :
    `sudo pacman -S --needed ghostty songrec direnv`
    puis `bash ~/.claude/skills/b-install/b-install-check.sh post`.
    Ghostty passe par le GPU (pile Mesa de dev) : le tester une fois avant de
