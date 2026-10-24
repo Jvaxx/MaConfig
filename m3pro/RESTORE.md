@@ -88,7 +88,16 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
   auto). Session graphique seulement : console et invite LUKS gardent l'ordre
   du noyau. Après un changement de layout, `omarchy restart xcompose`
   (relance fcitx5, dont le clavier virtuel garde sinon l'ancien keymap).
-
+- **Fn/Globe <-> Ctrl gauche** (hors `$HOME`, donc pas restauré par
+  `restore.sh`) : `hid_apple swap_fn_leftctrl=1` dans
+  `/etc/modprobe.d/hid_apple.conf`, posé le 2026-10-24 par
+  `sudo bash ~/b-fn-ctrl-swap.sh on` (retour : `off` ; état : `status`).
+  Impossible en XKB : Fn est `KEY_FN` (464), au-delà des 255 codes d'XKB.
+  `hid_apple` étant chargé depuis l'initramfs, seule l'image du noyau par
+  défaut (`linux-j514s-sleep-chg`) a été reconstruite ; les trois autres
+  le prendront à leur prochaine reconstruction (`mkinitcpio -P`). Vaut aussi
+  pour la console et l'invite LUKS. Si `iso_layout` est un jour réglé dans ce
+  fichier, retirer les deux touches ISO de `frmacbook` (double inversion).
 - **Veilleuse par shader** : `~/.local/lib/nightlight-shader/hyprsunset` +
   `nightlight-shader.service`. `appledrm` n'a pas de CTM, le vrai hyprsunset
   échoue ; ce démon sert le même socket et teinte via `screen_shader`.
@@ -101,12 +110,6 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 
 ## Reste à faire (avec `b-install`)
 
-0. **Fn/Globe <-> Ctrl gauche** : impossible en XKB (Fn est `KEY_FN`, code
-   464, au-delà des 255 codes d'XKB). Seul `hid_apple swap_fn_leftctrl=1`
-   le fait, et `hid_apple` est chargé dans l'initramfs (hooks `modconf` et
-   `keyboard`, avec `/etc/modprobe.d/hid_apple.conf`) : noyau/boot, donc
-   décision du projet OmarchyM3. Si `iso_layout` y est réglé aussi, retirer
-   les deux touches ISO de `frmacbook`, sinon elles s'inversent deux fois.
 
 1. Paquets requis par cette config (installés le 2026-10-24 ; à refaire
    après une réinstallation) :
