@@ -5,7 +5,7 @@ ROOT="$(cd "$HERE/.." && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S).$$"
 DRY=0
 
-# Lit une entrée sans casser les espaces (Library/Application Support, etc.).
+# Lit une entrée (mode, rel, repo) sans casser les espaces internes au chemin.
 entry() {
   local line="${1%%#*}"
   line="${line#"${line%%[![:space:]]*}"}"

@@ -33,6 +33,10 @@ while IFS= read -r line || [[ -n $line ]]; do
     link_entry
   elif [[ -f $repo && -f $HOME/$rel ]] && cmp -s "$repo" "$HOME/$rel"; then
     echo "  identique: $rel"
+  elif [[ -f $repo && -f $HOME/$rel && $HOME/$rel -nt $repo ]]; then
+    # sync.sh copie avec cp -p : une copie locale plus récente n'est pas encore
+    # sauvegardée. Supprimer le fichier local pour forcer la version du dépôt.
+    echo "  conservé (plus récent que le dépôt, à importer avec sync.sh): $rel"
   else
     copy_entry "$repo" "$HOME/$rel" yes
   fi
@@ -55,6 +59,13 @@ fi
 gtk-update-icon-cache "$HOME/.local/share/icons/hicolor" >/dev/null 2>&1 || true
 update-desktop-database "$HOME/.local/share/applications" >/dev/null 2>&1 || true
 systemctl --user daemon-reload
+# Les unités du MANIFEST qui ont une section [Install] sont activées et lancées.
+while IFS= read -r line || [[ -n $line ]]; do
+  entry "$line" || continue
+  [[ $rel == .config/systemd/user/* ]] && grep -q '^WantedBy=' "$repo" || continue
+  systemctl --user enable --now "${rel##*/}" ||
+    echo "Échec: systemctl --user enable --now ${rel##*/}" >&2
+done < "$HERE/MANIFEST"
 hyprctl reload
 hyprctl configerrors
 omarchy restart shell

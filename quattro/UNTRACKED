@@ -1,0 +1,53 @@
+# Configs volontairement NON sauvegardées. Chemins relatifs à $HOME, motifs glob.
+# Lu par sync.sh pour ne pas les signaler comme « Non suivis ».
+# Pour suivre un de ces fichiers : le retirer d'ici et l'ajouter au MANIFEST.
+
+# --- État d'applications, pas des réglages ---
+.config/chromium
+
+# --- Anciennes versions des exemples Omarchy (*.sample, jamais exécutés) ---
+.config/omarchy/hooks/*/*.sample
+
+# --- Wrappers mise générés par Omarchy (omarchy-default-agent, installs) ---
+.local/bin/claude
+.local/bin/codex
+.local/bin/copilot
+.local/bin/crush
+.local/bin/cursor-agent
+.local/bin/gemini
+.local/bin/gh
+.local/bin/ghui
+.local/bin/grok
+.local/bin/hunk
+.local/bin/muse
+.local/bin/omp
+.local/bin/opencode
+.local/bin/pi
+.local/bin/playwright
+.local/bin/playwright-cli
+# Unité installée par voxtype (dictée stock F9 / SUPER+CTRL+X).
+.config/systemd/user/voxtype.service
+
+# --- Binaires AirPods du plugin omapods (réinstallés par le plugin) ---
+.local/bin/librepods
+.local/bin/librepods-ctl
+
+# --- Outils perso, hors keybinds, réinstallés depuis leur propre source ---
+# Sous-titres live (app dans ~/.local/share/livecaption).
+.local/bin/livecaption
+.config/systemd/user/livecaption.service
+.config/systemd/user/livecaption-overlay.service
+# Garde le jeton OAuth de Claude Code frais pour le widget agents.
+.config/systemd/user/claude-token-refresh.*
+# Délégation Claude -> GPT via Pi ; le serveur MCP est déclaré dans ~/.claude.json,
+# ses consignes dans ~/.claude/pi.md (importé par le CLAUDE.md partagé).
+.local/bin/pi-investigate
+.local/bin/pi-investigate-mcp
+.claude/pi.md
+# Copie quotidienne des snapshots RevTracker du Pi (clé ~/.ssh/revtracker_backup).
+.local/bin/revtracker-pull
+.config/systemd/user/revtracker-pull.*
+
+# --- Autres ---
+# Seul écart : le thème "system" retiré.
+.config/opencode/opencode.json
