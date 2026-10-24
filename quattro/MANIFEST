@@ -6,7 +6,7 @@
 #
 # Deux sources possibles par entrée :
 #   .config/foo          -> ./home/.config/foo          (propre à cet hôte)
-#   shared:.config/foo   -> ../shared/home/.config/foo  (partagé avec asahi/)
+#   shared:.config/foo   -> ../shared/home/.config/foo  (partagé avec macos/)
 # Règle : tout ce qui touche Hyprland ou le système de thèmes Omarchy
 # (~/.local/state/omarchy/current/...) reste local.
 
@@ -22,8 +22,7 @@
 # --- Layouts clavier XKB custom (référencés par hypr/input.lua) ---
 # Sans eux, kb_layout = "frmac,qwertyansi" ne compile pas.
 # Locaux, PAS partagés : frmac reproduit le comportement clavier du Mac sur un
-# clavier PC. Sur le MacBook lui-même, les défauts font déjà l'affaire, donc
-# l'hôte asahi n'en veut pas.
+# clavier PC. Sur le Mac lui-même, les défauts font déjà l'affaire.
 .config/xkb/symbols/frmac
 .config/xkb/symbols/qwertyansi
 
@@ -112,8 +111,6 @@ copy:.config/omarchy-workspace-presets/presets.json
 #   omarchy restart xcompose
 # Le fichier reste local (il inclut /usr/share/omarchy/default/xcompose, absent
 # ailleurs) ; les règles perso vivent dans le fichier partagé ci-dessous.
-# shared:.config/xcompose/emoji n'est volontairement PAS listé ici : ce serait
-# un doublon du xcompose Omarchy déjà inclus par .XCompose.
 .XCompose
 shared:.config/xcompose/personal
 
@@ -140,8 +137,3 @@ shared:.config/git/config
 shared:.claude/CLAUDE.md
 copy:.claude/settings.json
 .claude/mods/math-render
-
-# --- Fragments shell portables (../shared/home/.config/shell) ---
-# Pas listés ici volontairement : sur cet hôte, aliases/env/init viennent déjà de
-# /usr/share/omarchy/default/bash/*, les sourcer ferait doublon. Ils existent
-# pour les hôtes sans Omarchy (voir asahi/MANIFEST).

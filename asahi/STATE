@@ -1,7 +1,0 @@
-distro=Fedora Linux Asahi Remix 44 (KDE Plasma Desktop Edition)
-kernel=7.1.13-402.asahi.fc44.aarch64+16k
-arch=aarch64
-desktop=KDE
-nvim=NVIM v0.12.5
-synced_at=2026-09-11T18:36:17.602031+00:00
-hostname=MBP14F

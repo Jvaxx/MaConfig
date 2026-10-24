@@ -1,8 +1,6 @@
 # Run omarchy-restart-xcompose to apply changes
 
 # Include fast emoji access
-# (fait autorité sur cet hôte : ../shared/home/.config/xcompose/emoji en est une
-#  copie, destinée aux machines sans Omarchy. Ne pas inclure les deux.)
 include "/usr/share/omarchy/default/xcompose"
 
 # Règles perso, partagées avec les autres machines
