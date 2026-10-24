@@ -71,8 +71,10 @@ copy:.config/omarchy/shell.json
 .local/share/icons/hicolor/256x256/apps/perplexity.png
 
 # --- Terminaux ---
-# Ghostty d'abord comme sur Quattro, puis foot (défaut omarchy-mac) tant que
-# Ghostty n'est pas installé. Kitty n'est pas installé ici : non suivi.
+# foot est le terminal par défaut ici (Quattro : Ghostty). Le fichier est celui
+# qu'écrit `omarchy default terminal foot` (`cat >`, qui suit le lien).
+# Ghostty reste installé et configuré comme sur Quattro. Kitty n'est pas
+# installé ici : non suivi.
 .config/xdg-terminals.list
 .config/ghostty/config
 .config/foot/foot.ini

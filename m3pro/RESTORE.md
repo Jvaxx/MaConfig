@@ -54,7 +54,7 @@ Tests isolés : `python3 -B -m unittest discover -s m3pro/tests -v`.
 | `hypr/monitors.lua` | **non suivi**, reste le défaut : écran interne `eDP-1`, scale auto (2), `GDK_SCALE=2`, ce qui garde `SUPER+SLASH` persistant |
 | `omarchy/shell.json` | même barre, mais le groupe du centre (mises à jour, indicateurs, horloge, layout clavier) est **à droite** : le centre de la barre est sous l'encoche. `idle.lock = 300` au lieu de 600 (le verrou éteint l'écran 5 s après) ; économiseur désactivé comme sur Quattro |
 | `jvz.menu`, `jvz.tray` | **reclonés depuis le stock de cet Omarchy**, pas copiés : les clones de Quattro viennent d'une autre version et gardent un `import QtQuick` nu, que Qt 6.12 casse ici (cf. `~/b4-shell-fixes.sh`). Mêmes retouches : classement de la recherche du menu, AppLibrary propre au menu, tiroir du tray toujours ouvert |
-| terminaux | `foot.ini` et `ghostty/config` identiques ; `xdg-terminals.list` met Ghostty puis foot, donc foot sert tant que Ghostty n'est pas installé. Copier/coller : `SUPER+C` / `SUPER+V` (Cmd+C / Cmd+V), qui envoient Ctrl/Shift+Insert, absents du clavier Mac |
+| terminaux | `foot.ini` et `ghostty/config` identiques ; **foot est le terminal par défaut** (`xdg-terminals.list`, comme l'écrit `omarchy default terminal foot`), là où Quattro utilise Ghostty ; Ghostty reste installé et configuré. Copier/coller : `SUPER+C` / `SUPER+V` (Cmd+C / Cmd+V), qui envoient Ctrl/Shift+Insert, absents du clavier Mac |
 | `.bashrc` | le bashrc Omarchy (l'image avait laissé celui d'Arch), `alias v.`, direnv protégé par `command -v` |
 | `btop.conf` | celui de cette machine (pas de section GPU dans ce btop) avec `update_ms = 1000` de Quattro |
 | `.claude/settings.json` | celui de Quattro sans le bloc `autoMode` (il décrit le HOME du fixe) |
@@ -115,8 +115,8 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
    après une réinstallation) :
    `sudo pacman -S --needed ghostty songrec direnv`
    puis `bash ~/.claude/skills/b-install/b-install-check.sh post`.
-   Ghostty passe par le GPU (pile Mesa de dev) : le tester une fois avant de
-   s'y fier.
+   Ghostty n'est pas le terminal par défaut ici (foot) ; il passe par le GPU
+   (pile Mesa de dev) : le tester une fois avant de s'y fier.
 2. Plugins externes de Quattro : `omarchy plugin add <url>` sans `--enable`,
    relire le code, vérifier le snapshot du marketplace et les `import QtQuick`
    nus, puis les remettre dans `shell.json` et `external-plugins.txt`.
