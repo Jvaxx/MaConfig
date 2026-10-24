@@ -11,3 +11,6 @@ __pycache__/
 
 # Dépendances npm du mod Claude math-render (npm ci dans helper/).
 /quattro/home/.claude/mods/math-render/helper/node_modules/
+
+# Dépendances npm du mod Claude math-render sur le M3 Pro.
+/m3pro/home/.claude/mods/math-render/helper/node_modules/

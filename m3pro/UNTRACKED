@@ -1,0 +1,49 @@
+# Configs volontairement NON sauvegardées. Chemins relatifs à $HOME, motifs glob.
+# Lu par sync.sh pour ne pas les signaler comme « Non suivis ».
+# Pour suivre un de ces fichiers : le retirer d'ici et l'ajouter au MANIFEST.
+
+# --- État d'applications, pas des réglages ---
+.config/chromium
+
+# --- Anciennes versions des exemples Omarchy (*.sample, jamais exécutés) ---
+.config/omarchy/hooks/*/*.sample
+
+# --- Hooks posés par l'installation Omarchy (stock, réinstallés par elle) ---
+.config/omarchy/hooks/post-update.d/install-voxtype.hook
+.config/omarchy/hooks/post-update.d/setup-agent.hook
+.config/omarchy/hooks/post-update.d/setup-fingerprint.hook
+
+# --- Wrappers mise générés par Omarchy (omarchy-default-agent, installs) ---
+.local/bin/agy
+.local/bin/claude
+.local/bin/codex
+.local/bin/copilot
+.local/bin/crush
+.local/bin/gh
+.local/bin/ghui
+.local/bin/grok
+.local/bin/hermes
+.local/bin/hey
+.local/bin/hunk
+.local/bin/omp
+.local/bin/opencode
+.local/bin/ori
+.local/bin/pi
+.local/bin/playwright
+
+# --- Binaires AirPods du plugin omapods (réinstallés par le plugin) ---
+.local/bin/librepods
+.local/bin/librepods-ctl
+
+# --- Unités posées par omarchy-mac (stock, réinstallées par lui) ---
+# Remappage stéréo du micro Asahi (ExecCondition omarchy-hw-apple).
+.config/systemd/user/omarchy-asahi-mic.service
+# Priorité basse pour la prise casque 3,5 mm (posé par
+# $OMARCHY_PATH/install/user/hardware/apple/mic.sh, copie d'un défaut Omarchy).
+.config/wireplumber/wireplumber.conf.d/asahi-headset-mic.conf
+
+# --- Autres ---
+# Kitty n'est pas installé ici ; seul écart : l'espacement réécrit par omarchy-font-set.
+.config/kitty/kitty.conf
+# Sauvegardes manuelles d'avant le clavier/touchpad, fusionnées dans hypr/input.lua.
+.config/hypr/input.lua.before-*

@@ -1,0 +1,5 @@
+# Terminal emulator preference order for xdg-terminal-exec
+# The first found and valid terminal will be used
+# Ghostty as on Quattro; foot (the Omarchy-mac default here) until it is installed.
+com.mitchellh.ghostty.desktop
+foot.desktop

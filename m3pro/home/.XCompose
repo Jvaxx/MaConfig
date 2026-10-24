@@ -1,0 +1,7 @@
+# Run omarchy-restart-xcompose to apply changes
+
+# Include fast emoji access
+include "/usr/share/omarchy/default/xcompose"
+
+# Règles perso, partagées avec les autres machines
+include "%H/.config/xcompose/personal"

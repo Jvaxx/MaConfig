@@ -1,0 +1,99 @@
+# Fichiers/dossiers sauvegardés. Chemins relatifs à $HOME.
+# Une entrée par ligne. Lignes vides et commençant par # ignorées.
+# Par défaut : restore.sh crée un symlink vers le dépôt, sync.sh le vérifie.
+# copy: garde une copie locale (logiciels réécrivant leurs configs).
+# Pour ajouter un fichier : comparer/importer dans home/ AVANT restore.sh.
+#
+# Deux sources possibles par entrée :
+#   .config/foo          -> ./home/.config/foo          (propre à cet hôte)
+#   shared:.config/foo   -> ../shared/home/.config/foo  (partagé avec quattro/ et macos/)
+#
+# MacBook Pro 14" M3 Pro, Arch Linux ARM + Omarchy (omarchy-mac), laptop.
+# Objectif : rester au plus près de Quattro (le fixe). Les fichiers repris de
+# quattro/home sont des COPIES adaptées, pas des liens : cet hôte a une autre
+# version d'Omarchy, un autre clavier, un seul écran et une batterie.
+# Ce qui n'est PAS repris de Quattro, et pourquoi : voir RESTORE.md.
+
+# --- Hyprland (modifiés vs défauts Omarchy) ---
+# hyprland.lua : règle scratchpad de Quattro, sans les règles de jeux x86.
+# bindings.lua : binds de Quattro, sans bascule de layout ni micro Bbox.
+# input.lua    : clavier Mac fr(mac) + touchpad façon macOS + répétition de Quattro.
+# looknfeel.lua: celui de Quattro + curseur logiciel (pas de curseur matériel ici).
+# monitors.lua et autostart.lua restent les défauts (écran interne, scale auto).
+.config/hypr/hyprland.lua
+.config/hypr/bindings.lua
+.config/hypr/input.lua
+.config/hypr/looknfeel.lua
+
+# --- Scripts appelés par les keybindings (sans eux, les binds sont morts) ---
+.local/bin/hypr-window-full-width
+# SUPER + code:38 — Shazam (nécessite le paquet songrec)
+.local/bin/omarchy-shazam
+
+# --- Veilleuse par shader (propre au M3 Pro) ---
+# appledrm n'a pas de CTM : le vrai hyprsunset échoue. Ce démon sert le socket
+# de hyprsunset et teinte via decoration:screen_shader. Source et installeur :
+# ~/nightlight-shader/. L'unité a une section [Install] : restore.sh l'active.
+.local/lib/nightlight-shader/hyprsunset
+.config/systemd/user/nightlight-shader.service
+
+# --- Omarchy shell ---
+# Les commandes Omarchy remplacent shell.json par rename : casseraient un lien.
+copy:.config/omarchy/shell.json
+.config/omarchy/shell.toml
+
+# --- Menu et tray custom ---
+# Reclonés depuis les plugins stock de CET Omarchy (4.0.3rc4), pas copiés de
+# Quattro : ses clones viennent d'une autre version et gardent un
+# `import QtQuick` nu, que Qt 6.12 casse ici (cf. ~/b4-shell-fixes.sh).
+# Mêmes retouches que sur Quattro (voir RESTORE.md).
+.config/omarchy/plugins/jvz.menu
+.config/omarchy/plugins/jvz.tray
+
+# --- Layouts par workspace (écrits par SUPER+ALT+L / omarchy-hyprland-workspace-layout-toggle) ---
+.local/state/omarchy/workspace-layouts
+
+# --- Divers Omarchy perso ---
+.config/omarchy/defaults/agent
+
+# --- Web apps perso (créées via `omarchy webapp install`) ---
+# Ouvertes par Chromium (omarchy-launch-webapp, navigateur par défaut Zen non
+# géré), via le wrapper /usr/local/bin/chromium d'omarchy-mac.
+.local/share/applications/Claude.desktop
+.local/share/applications/Perplexity.desktop
+.local/share/icons/hicolor/256x256/apps/claude.png
+.local/share/icons/hicolor/256x256/apps/perplexity.png
+
+# --- Terminaux ---
+# Ghostty d'abord comme sur Quattro, puis foot (défaut omarchy-mac) tant que
+# Ghostty n'est pas installé. Kitty n'est pas installé ici : non suivi.
+.config/xdg-terminals.list
+.config/ghostty/config
+.config/foot/foot.ini
+
+# --- Environnement shell (à la racine de $HOME, pas dans .config) ---
+# .bashrc : le bashrc Omarchy (l'image de base avait laissé celui d'Arch) + alias v.
+.bashrc
+.bash_profile
+
+# --- Règles de composition clavier (~/.XCompose) ---
+.XCompose
+shared:.config/xcompose/personal
+
+# --- Neovim ---
+shared:.config/nvim
+
+# --- Outils CLI ---
+copy:.config/btop/btop.conf
+shared:.config/starship.toml
+shared:.config/tmux/tmux.conf
+shared:.config/git/config
+
+# --- Claude Code (config globale) ---
+# settings.json : celui de Quattro sans le bloc autoMode (décrit le HOME du fixe).
+# math-render : après restauration, (cd helper && npm ci).
+# b-install : règles d'installation propres à cette machine (noyau, GPU, sudo).
+shared:.claude/CLAUDE.md
+copy:.claude/settings.json
+.claude/mods/math-render
+.claude/skills/b-install

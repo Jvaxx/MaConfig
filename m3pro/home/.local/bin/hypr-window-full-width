@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# "Make this window wide", dispatched to whatever the active workspace's layout
+# actually understands.
+#
+#   scrolling -> cycle the column through scrolling:explicit_column_widths
+#                (0.333, 0.5, 0.667, 1.0 by default); 1.0 fills the screen while
+#                the window stays a normal column, so focus left/right keeps
+#                working.
+#   dwindle   -> Omarchy's stock behaviour, fullscreen mode 1 (maximize): fills
+#                the work area, keeps the bar visible, press again to restore.
+#
+# The split exists because maximize is broken on the scrolling layout: it lifts
+# the window out of the tape, shoves the neighbouring columns fully offscreen,
+# and a subsequent movefocus leaves no window focused at all.
+
+set -euo pipefail
+
+layout=$(hyprctl activeworkspace -j | jq -r '.tiledLayout')
+
+if [[ $layout == "scrolling" ]]; then
+  hyprctl dispatch 'hl.dsp.layout("colresize +conf")' >/dev/null
+else
+  hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized" })' >/dev/null
+fi

@@ -1,0 +1,17 @@
+[Unit]
+Description=Shader-based night light (hyprsunset stand-in; appledrm has no CTM)
+PartOf=graphical-session.target
+Requires=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+Environment=NLS_STRENGTH=1.2
+ExecStart=%h/.local/lib/nightlight-shader/hyprsunset
+Restart=always
+RestartSec=3
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
