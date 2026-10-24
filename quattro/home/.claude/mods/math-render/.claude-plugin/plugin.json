@@ -1,0 +1,6 @@
+{
+  "name": "math-render",
+  "version": "0.1.0",
+  "description": "Draw LaTeX in assistant replies as terminal images (a port of pi-math)",
+  "author": { "name": "jvz" }
+}

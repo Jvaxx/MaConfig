@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "presets": [
+    {
+      "id": "886a97dd-072f-4442-9395-7fbedc99097b",
+      "name": "tinyrenderer",
+      "createdAt": "2026-09-17T09:19:43+00:00",
+      "updatedAt": "2026-09-17T11:38:56+00:00",
+      "lastUsedAt": "2026-10-10T08:40:29+00:00",
+      "useCount": 13,
+      "snapshot": {
+        "schemaVersion": 1,
+        "capturedAt": "2026-09-17T11:37:35+00:00",
+        "source": {
+          "workspaceName": "1",
+          "monitor": "HDMI-A-1",
+          "workarea": {
+            "x": 0,
+            "y": 26,
+            "width": 2400,
+            "height": 1324,
+            "scale": 1.6,
+            "transform": 0,
+            "monitor": "HDMI-A-1"
+          },
+          "hyprlandVersion": "0.56.2"
+        },
+        "layout": {
+          "name": "scrolling",
+          "direction": "right",
+          "columns": [
+            {
+              "width": 0.3330000042915344,
+              "slots": [
+                "7aa30ee9-9b60-46fa-a77e-41beb4586a22"
+              ],
+              "sizes": {
+                "7aa30ee9-9b60-46fa-a77e-41beb4586a22": 0.9939577039274925
+              }
+            },
+            {
+              "width": 0.6669999957084656,
+              "slots": [
+                "ec9fac46-5852-4be3-ad22-12ec171b1cad"
+              ],
+              "sizes": {
+                "ec9fac46-5852-4be3-ad22-12ec171b1cad": 0.9939577039274925
+              }
+            },
+            {
+              "width": 0.3330000042915344,
+              "slots": [
+                "925f4ce8-d882-4011-9c76-63bf6a2ec30b",
+                "5381177d-7ed1-452c-b331-426293ccd5c1",
+                "f7f5f951-63eb-4c67-aef5-67163639f6f0"
+              ],
+              "sizes": {
+                "925f4ce8-d882-4011-9c76-63bf6a2ec30b": 0.3731117824773414,
+                "5381177d-7ed1-452c-b331-426293ccd5c1": 0.5075528700906344,
+                "f7f5f951-63eb-4c67-aef5-67163639f6f0": 0.10120845921450151
+              }
+            }
+          ],
+          "tapeOffset": -794.0,
+          "tapeOffsetNormalized": -0.3308333333333333
+        },
+        "windows": [
+          {
+            "id": "7aa30ee9-9b60-46fa-a77e-41beb4586a22",
+            "captureStableId": "180001ac",
+            "match": {
+              "class": "foot",
+              "initialClass": "foot",
+              "title": "π - tinyrenderer",
+              "initialTitle": "foot",
+              "executable": "foot",
+              "xwayland": false,
+              "terminalProgram": "pi"
+            },
+            "launcher": {
+              "kind": "command",
+              "argv": [
+                "/usr/bin/foot",
+                "--working-directory=/home/jvz/Documents/Divers/tinyrenderer",
+                "-e",
+                "pi",
+                "--model",
+                "openai-codex/gpt-6-astra:high"
+              ],
+              "cwd": "/"
+            },
+            "launcherCandidates": [],
+            "geometry": {
+              "pixels": {
+                "x": -794,
+                "y": 30,
+                "width": 792,
+                "height": 1316
+              },
+              "normalized": {
+                "x": -0.3308333333333333,
+                "y": 0.0030211480362537764,
+                "width": 0.33,
+                "height": 0.9939577039274925
+              }
+            },
+            "state": {
+              "floating": false,
+              "pinned": false,
+              "pinFullscreened": false,
+              "fullscreen": 0,
+              "fullscreenClient": 0,
+              "tags": [
+                "default-opacity*",
+                "terminal*"
+              ],
+              "pseudo": false
+            },
+            "focusHistoryID": 2
+          },
+          {
+            "id": "ec9fac46-5852-4be3-ad22-12ec171b1cad",
+            "captureStableId": "180001ad",
+            "match": {
+              "class": "foot",
+              "initialClass": "foot",
+              "title": "nvim — tinyrenderer",
+              "initialTitle": "nvim — tinyrenderer",
+              "executable": "foot",
+              "xwayland": false,
+              "terminalProgram": "nvim"
+            },
+            "launcher": {
+              "kind": "command",
+              "argv": [
+                "/usr/bin/foot",
+                "--working-directory=/home/jvz/Documents/Divers/tinyrenderer",
+                "--title=nvim — tinyrenderer",
+                "-e",
+                "nvim",
+                "."
+              ],
+              "cwd": "/"
+            },
+            "launcherCandidates": [],
+            "geometry": {
+              "pixels": {
+                "x": 6,
+                "y": 30,
+                "width": 1590,
+                "height": 1316
+              },
+              "normalized": {
+                "x": 0.0025,
+                "y": 0.0030211480362537764,
+                "width": 0.6625,
+                "height": 0.9939577039274925
+              }
+            },
+            "state": {
+              "floating": false,
+              "pinned": false,
+              "pinFullscreened": false,
+              "fullscreen": 0,
+              "fullscreenClient": 0,
+              "tags": [
+                "default-opacity*",
+                "terminal*"
+              ],
+              "pseudo": false
+            },
+            "focusHistoryID": 0
+          },
+          {
+            "id": "5381177d-7ed1-452c-b331-426293ccd5c1",
+            "captureStableId": "180001ab",
+            "match": {
+              "class": "feh",
+              "initialClass": "feh",
+              "title": "feh [1 of 1] - /home/jvz/Documents/Divers/tinyrenderer/framebuffer.tga",
+              "initialTitle": "feh [1 of 1] - /home/jvz/Documents/Divers/tinyrenderer/framebuffer.tga",
+              "executable": "feh",
+              "xwayland": true
+            },
+            "launcher": {
+              "kind": "command",
+              "argv": [
+                "feh",
+                "--auto-zoom",
+                "--force-aliasing",
+                "/home/jvz/Documents/Divers/tinyrenderer/framebuffer.tga"
+              ]
+            },
+            "launcherCandidates": [
+              {
+                "desktopId": "feh.desktop",
+                "name": "Feh",
+                "startupClass": "",
+                "executable": "feh",
+                "terminal": false,
+                "noDisplay": true,
+                "score": 260,
+                "reasons": [
+                  "desktop id",
+                  "process executable",
+                  "Exec/class"
+                ]
+              }
+            ],
+            "geometry": {
+              "pixels": {
+                "x": 1604,
+                "y": 532,
+                "width": 792,
+                "height": 672
+              },
+              "normalized": {
+                "x": 0.6683333333333333,
+                "y": 0.3821752265861027,
+                "width": 0.33,
+                "height": 0.5075528700906344
+              }
+            },
+            "state": {
+              "floating": false,
+              "pinned": false,
+              "pinFullscreened": false,
+              "fullscreen": 0,
+              "fullscreenClient": 0,
+              "tags": [
+                "default-opacity*"
+              ],
+              "pseudo": false
+            },
+            "focusHistoryID": 3
+          },
+          {
+            "id": "f7f5f951-63eb-4c67-aef5-67163639f6f0",
+            "captureStableId": "180001ae",
+            "match": {
+              "class": "foot",
+              "initialClass": "foot",
+              "title": "jvz@FIXEJVZ:~/Documents/Divers/tinyrenderer",
+              "initialTitle": "foot",
+              "executable": "foot",
+              "xwayland": false
+            },
+            "launcher": {
+              "kind": "command",
+              "argv": [
+                "foot",
+                "--working-directory=/home/jvz/Documents/Divers/tinyrenderer"
+              ]
+            },
+            "launcherCandidates": [
+              {
+                "desktopId": "foot.desktop",
+                "name": "Foot",
+                "startupClass": "foot",
+                "executable": "foot",
+                "terminal": false,
+                "noDisplay": false,
+                "score": 380,
+                "reasons": [
+                  "StartupWMClass",
+                  "desktop id",
+                  "process executable",
+                  "Exec/class"
+                ]
+              },
+              {
+                "desktopId": "foot-server.desktop",
+                "name": "Foot Server",
+                "startupClass": "",
+                "executable": "foot",
+                "terminal": false,
+                "noDisplay": false,
+                "score": 160,
+                "reasons": [
+                  "process executable",
+                  "Exec/class"
+                ]
+              }
+            ],
+            "geometry": {
+              "pixels": {
+                "x": 1604,
+                "y": 1212,
+                "width": 792,
+                "height": 134
+              },
+              "normalized": {
+                "x": 0.6683333333333333,
+                "y": 0.8957703927492447,
+                "width": 0.33,
+                "height": 0.10120845921450151
+              }
+            },
+            "state": {
+              "floating": false,
+              "pinned": false,
+              "pinFullscreened": false,
+              "fullscreen": 0,
+              "fullscreenClient": 0,
+              "tags": [
+                "default-opacity*",
+                "terminal*"
+              ],
+              "pseudo": false
+            },
+            "focusHistoryID": 4
+          },
+          {
+            "id": "925f4ce8-d882-4011-9c76-63bf6a2ec30b",
+            "captureStableId": "180001af",
+            "match": {
+              "class": "foot",
+              "initialClass": "foot",
+              "title": "jvz@FIXEJVZ:~/Documents/Divers/tinyrenderer",
+              "initialTitle": "foot",
+              "executable": "foot",
+              "xwayland": false
+            },
+            "launcher": {
+              "kind": "command",
+              "argv": [
+                "foot",
+                "--working-directory=/home/jvz/Documents/Divers/tinyrenderer"
+              ]
+            },
+            "launcherCandidates": [
+              {
+                "desktopId": "foot.desktop",
+                "name": "Foot",
+                "startupClass": "foot",
+                "executable": "foot",
+                "terminal": false,
+                "noDisplay": false,
+                "score": 380,
+                "reasons": [
+                  "StartupWMClass",
+                  "desktop id",
+                  "process executable",
+                  "Exec/class"
+                ]
+              },
+              {
+                "desktopId": "foot-server.desktop",
+                "name": "Foot Server",
+                "startupClass": "",
+                "executable": "foot",
+                "terminal": false,
+                "noDisplay": false,
+                "score": 160,
+                "reasons": [
+                  "process executable",
+                  "Exec/class"
+                ]
+              }
+            ],
+            "geometry": {
+              "pixels": {
+                "x": 1604,
+                "y": 30,
+                "width": 792,
+                "height": 494
+              },
+              "normalized": {
+                "x": 0.6683333333333333,
+                "y": 0.0030211480362537764,
+                "width": 0.33,
+                "height": 0.3731117824773414
+              }
+            },
+            "state": {
+              "floating": false,
+              "pinned": false,
+              "pinFullscreened": false,
+              "fullscreen": 0,
+              "fullscreenClient": 0,
+              "tags": [
+                "default-opacity*",
+                "terminal*"
+              ],
+              "pseudo": false
+            },
+            "focusHistoryID": 1
+          }
+        ],
+        "groups": [],
+        "finalFocusSlotId": "ec9fac46-5852-4be3-ad22-12ec171b1cad"
+      }
+    }
+  ],
+  "presetGroups": [],
+  "startupGroupId": null,
+  "confirmStartupLaunch": false
+}

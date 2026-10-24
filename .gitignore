@@ -12,3 +12,6 @@ __pycache__/
 /macos/home/.zshrc.local
 /macos/home/.zprofile.local
 .DS_Store
+
+# Dépendances npm du mod Claude math-render (npm ci dans helper/).
+/quattro/home/.claude/mods/math-render/helper/node_modules/

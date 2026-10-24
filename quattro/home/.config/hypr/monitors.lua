@@ -32,10 +32,12 @@ hl.env("GDK_SCALE", "1")
 -- does not survive a reload -- change the scale here instead. An unlisted
 -- monitor falls back to Hyprland's own default of preferred/auto/1.
 
--- Workspaces 1-2 live on the 4K, 3-4 on the 1080p, 5 is deliberately unbound so
--- it opens on whichever monitor has focus. default = true picks the workspace
--- each monitor shows when it first comes up.
+-- Workspaces 1-4 live on the main 4K screen, 5-6 on the 1080p screen.
+-- When the 1080p is disconnected, its workspaces use the available screen.
+-- default = true picks the workspace each monitor shows when it first comes up.
 hl.workspace_rule({ workspace = "1", monitor = "HDMI-A-1", default = true })
 hl.workspace_rule({ workspace = "2", monitor = "HDMI-A-1" })
-hl.workspace_rule({ workspace = "3", monitor = "HDMI-A-2", default = true })
-hl.workspace_rule({ workspace = "4", monitor = "HDMI-A-2" })
+hl.workspace_rule({ workspace = "3", monitor = "HDMI-A-1" })
+hl.workspace_rule({ workspace = "4", monitor = "HDMI-A-1" })
+hl.workspace_rule({ workspace = "5", monitor = "HDMI-A-2", default = true })
+hl.workspace_rule({ workspace = "6", monitor = "HDMI-A-2" })

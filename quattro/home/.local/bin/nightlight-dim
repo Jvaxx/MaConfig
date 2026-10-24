@@ -1,0 +1,19 @@
+#!/bin/bash
+# Dims the screen whenever Omarchy's night light is on, and restores full
+# brightness when it's off. It uses hyprsunset's gamma rather than an overlay,
+# and polls so every toggle path works: the keybind, the bar widget, the menu.
+#   NIGHTLIGHT_GAMMA  brightness in % while night light is on (default 70)
+
+DIM=${NIGHTLIGHT_GAMMA:-70}
+IDENTITY_TEMP=6000   # matches omarchy-toggle-nightlight
+
+num() { grep -oE '[0-9]+' <<<"$1" | head -n1; }
+
+while sleep 2; do
+  pgrep -x hyprsunset >/dev/null || continue
+  temp=$(num "$(hyprctl hyprsunset temperature 2>/dev/null)")
+  gamma=$(num "$(hyprctl hyprsunset gamma 2>/dev/null)")
+  [[ -z $temp || -z $gamma ]] && continue
+  if (( temp < IDENTITY_TEMP )); then want=$DIM; else want=100; fi
+  (( gamma != want )) && hyprctl hyprsunset gamma "$want" >/dev/null 2>&1
+done

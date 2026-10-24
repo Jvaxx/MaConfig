@@ -90,26 +90,16 @@ o.bind("SUPER + SHIFT + L", "Stack window into column on the right", hl.dsp.layo
 -- Stock SUPER+CTRL+F ("Tiled full screen") only flips the window's CLIENT
 -- fullscreen state (fullscreenstate 0 2), which asks the app to drop its own
 -- chrome but never resizes the tile. On dwindle that pairs with a big tile; on
--- the scrolling layout the column keeps its width, so the key looks dead.
---
--- The scrolling way to "go full screen" is simply a column of width 1.0: the
--- window still sits on the tape, so SUPER+H/L keep scrolling focus to the
--- neighbours (unlike SUPER+F, which lifts it out of the layout entirely).
--- colresize +conf cycles scrolling:explicit_column_widths, which defaults to
--- 0.333, 0.5, 0.667, 1.0 and wraps -- full width is just the last stop.
---
--- Reminder: with altwin:swap_lalt_lwin this is physically Super + Alt + F.
--- Stock SUPER+CTRL+F ("Tiled full screen") only flips the window's CLIENT
--- fullscreen state (fullscreenstate 0 2), which asks the app to drop its own
--- chrome but never resizes the tile. On dwindle that pairs with a big tile; on
 -- the scrolling layout the column keeps its width, so the key looks dead. Left
 -- unbound here -- widening lives on SUPER+ALT+F with the rest of the window ops.
 hl.unbind("SUPER + CTRL + F") -- was: Tiled full screen (a no-op on scrolling)
 
 -- The scrolling way to "go full screen" is simply a column of width 1.0: the
 -- window still sits on the tape, so SUPER+H/L keep scrolling focus to the
--- neighbours. colresize +conf cycles scrolling:explicit_column_widths, which
--- defaults to 0.333, 0.5, 0.667, 1.0 and wraps -- full width is the last stop.
+-- neighbours (unlike SUPER+F, which lifts it out of the layout entirely).
+-- colresize +conf cycles scrolling:explicit_column_widths, which defaults to
+-- 0.333, 0.5, 0.667, 1.0 and wraps -- full width is just the last stop.
+--
 -- Stock SUPER+ALT+F is fullscreen mode 1 (maximize), which is useful on dwindle
 -- but broken on scrolling: it pushes the neighbouring columns fully offscreen
 -- and a following movefocus lands on no window at all. So the bind dispatches

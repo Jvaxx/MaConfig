@@ -1,5 +1,6 @@
-# Paquets explicites (pacman -Qqe) — 2026-09-20T19:15:19+02:00
+# Paquets explicites (pacman -Qqe) au dernier sync, voir STATE.
 # Référence uniquement : à réinstaller à la main après restauration.
+7zip
 aether
 alacritty
 alsa-utils
@@ -21,6 +22,7 @@ brightnessctl
 btop
 btrfs-progs
 chromium
+ckan
 clang
 cliamp
 cmake
@@ -55,8 +57,11 @@ fontconfig
 foot
 freerdp
 fzf
+gamescope
+ghostty
 git
 github-cli
+gitleaks
 glow
 gnome-disk-utility
 gnome-keyring
@@ -86,6 +91,7 @@ jellyfin-ffmpeg
 jq
 kdenlive
 kernel-modules-hook
+lact
 lazydocker
 lazygit
 less
@@ -110,7 +116,9 @@ lmstudio-bin
 localsend
 lua51
 luarocks
+lutris
 man-db
+mangohud
 mariadb-libs
 mise-bin
 mkinitcpio
@@ -155,6 +163,7 @@ power-profiles-daemon
 python-gobject
 python-pipx
 python-poetry-core
+python-protobuf
 python-tiktoken
 qemu-user-static-binfmt
 qrencode
@@ -181,6 +190,7 @@ system-config-printer
 tensaku
 tesseract
 tesseract-data-eng
+tesseract-data-fra
 tldr
 tmux
 tobi-try
@@ -193,6 +203,7 @@ tzupdate
 udiskie
 ufw
 ufw-docker
+umu-launcher
 unzip
 usage
 uv
@@ -200,6 +211,10 @@ uwsm
 voxtype-bin
 wayland-pipewire-idle-inhibit
 whois
+wine-gecko
+wine-mono
+wine-staging
+winetricks
 wireless-regdb
 wireplumber
 wl-clipboard

@@ -16,6 +16,8 @@
 .config/hypr/input.lua
 .config/hypr/looknfeel.lua
 .config/hypr/monitors.lua
+# Lance nightlight-dim (ci-dessous) au démarrage de la session.
+.config/hypr/autostart.lua
 
 # --- Layouts clavier XKB custom (référencés par hypr/input.lua) ---
 # Sans eux, kb_layout = "frmac,qwertyansi" ne compile pas.
@@ -37,6 +39,10 @@
 .local/bin/bbox-mic
 .local/bin/bbox-mic-bridge
 .config/systemd/user/bbox-mic-bridge.service
+
+# --- Veilleuse : baisse la luminosité quand le night light Omarchy est actif ---
+# Lancé par hypr/autostart.lua ; NIGHTLIGHT_GAMMA règle le niveau (défaut 70 %).
+.local/bin/nightlight-dim
 
 # --- Omarchy shell ---
 # Les commandes Omarchy remplacent shell.json par rename : casseraient un lien.
@@ -61,6 +67,10 @@ copy:.config/omarchy/shell.json
 .config/omarchy/extensions/omarchy-menu.jsonc
 .config/omarchy/extensions/menu.sh
 
+# --- Presets du plugin blakestarling.workspace-presets ---
+# copy: le plugin ouvre ce fichier en O_NOFOLLOW et refuserait un lien.
+copy:.config/omarchy-workspace-presets/presets.json
+
 # --- Layouts par workspace (écrits par SUPER+ALT+L / omarchy-hyprland-workspace-layout-toggle) ---
 .local/state/omarchy/workspace-layouts
 
@@ -80,6 +90,13 @@ copy:.config/omarchy/shell.json
 .local/share/icons/hicolor/256x256/apps/perplexity.png
 
 # --- Terminaux (modifiés vs défauts) ---
+# Ghostty est le terminal par défaut (xdg-terminals.list, réécrit par
+# `omarchy install terminal` via `cat >`, qui suit le lien).
+# omarchy-font-set fait `sed -i` sur ghostty et foot : ça remplace le lien par
+# un fichier, que sync.sh signale. omarchy-refresh-config, lui, fait `cp -f` à
+# travers le lien : le défaut écrase alors le dépôt, visible dans `git diff`.
+.config/xdg-terminals.list
+.config/ghostty/config
 .config/foot/foot.ini
 .config/kitty/kitty.conf
 
@@ -113,6 +130,16 @@ copy:.config/btop/btop.conf
 shared:.config/starship.toml
 shared:.config/tmux/tmux.conf
 shared:.config/git/config
+
+# --- Claude Code (config globale) ---
+# CLAUDE.md est partagé et importe ~/.claude/pi.md (délégation Pi, propre à
+# cet hôte, non sauvegardée) ; l'import est ignoré là où pi.md n'existe pas.
+# settings.json est réécrit par Claude Code (/config, /model) : copie.
+# math-render : mod chargé via CLAUDE_CODE_PLUGIN_DIRS dans settings.json ;
+# node_modules n'est pas versionné, après restauration : (cd helper && npm ci).
+shared:.claude/CLAUDE.md
+copy:.claude/settings.json
+.claude/mods/math-render
 
 # --- Fragments shell portables (../shared/home/.config/shell) ---
 # Pas listés ici volontairement : sur cet hôte, aliases/env/init viennent déjà de

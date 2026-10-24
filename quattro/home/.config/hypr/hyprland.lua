@@ -46,3 +46,5 @@ hl.config({
 })
 
 o.window({ class = "^(factorio)$" }, { render_unfocused = true })
+-- KSP under Proton-GE in native Wayland mode (same blocked-present freeze).
+o.window({ class = "^(ksp_x64\\.exe)$" }, { render_unfocused = true })

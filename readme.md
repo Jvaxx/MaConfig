@@ -19,8 +19,8 @@ shared:.config/tmux/tmux.conf  -> shared/home/.config/tmux/tmux.conf
 
 **Règle de répartition** : ce qui référence Hyprland ou le système de thèmes
 Omarchy (`~/.local/state/omarchy/current/…`) reste local à `quattro/`. Le reste
-peut aller dans `shared/` — nvim, tmux, starship, git, les fragments shell et
-les règles Compose. Les layouts XKB restent locaux à `quattro/`;
+peut aller dans `shared/` — nvim, tmux, starship, git, les fragments shell,
+les règles Compose et le `CLAUDE.md` de Claude Code. Les layouts XKB restent locaux à `quattro/`;
 ils ne sont ni partagés ni installés sur Asahi.
 
 Mise en route d'une machine : `quattro/RESTORE.md`, `asahi/RESTORE.md`
@@ -28,7 +28,7 @@ ou `macos/RESTORE.md`. Sur macOS, seuls Neovim, tmux et Starship sont partagés 
 Git et Zsh restent locaux (les helpers Git Linux ne sont pas portables).
 Sur macOS et Quattro, `restore.sh` installe des liens vers le dépôt ; `sync.sh`
 vérifie les liens et exporte les inventaires. Les entrées `copy:` (Karabiner sur
-macOS ; shell.json et btop sur Quattro) gardent le fonctionnement par copie.
+macOS ; shell.json, btop et les presets de workspaces sur Quattro) gardent le fonctionnement par copie.
 Les scripts Asahi restent inchangés.
 Ce qui a été élagué au portage vers le Mac : `asahi/DROPPED.md`.
 
