@@ -48,7 +48,7 @@ Tests isolés : `python3 -B -m unittest discover -s m3pro/tests -v`.
 | Fichier | Par rapport à Quattro |
 |---|---|
 | `hypr/bindings.lua` | identiques, sauf ce qui est listé plus bas comme non repris. Mêmes touches physiques : le clavier Mac a nativement l'ordre Ctrl, Option, Cmd, Espace que Quattro obtient avec `altwin:swap_lalt_lwin`. ALT = Option **gauche** (l'Option droite est AltGr). `code:58` = touche `, ?`, `code:38` = touche `Q` |
-| `hypr/input.lua` | `fr` / `mac` stock (pas de `frmac`/`qwertyansi` : c'est le clavier qu'ils imitent), `caps:escape_shifted_capslock`, répétition 60 / 170 comme Quattro ; plus le touchpad façon macOS (tap, glisser à 3 doigts, workspaces à 4 doigts) |
+| `hypr/input.lua` | layout `frmacbook` (voir plus bas) au lieu de `frmac`/`qwertyansi`, qui imitent ce clavier sur un clavier PC ; `caps:escape_shifted_capslock`, répétition 60 / 170 comme Quattro ; plus le touchpad façon macOS (tap, glisser à 3 doigts, workspaces à 4 doigts) |
 | `hypr/looknfeel.lua` | identique + `cursor:no_hardware_cursors` (pas de curseur matériel sur ce GPU) |
 | `hypr/hyprland.lua` | règle scratchpad en scrolling ; règles `render_unfocused` des jeux non reprises |
 | `hypr/monitors.lua` | **non suivi**, reste le défaut : écran interne `eDP-1`, scale auto (2), `GDK_SCALE=2`, ce qui garde `SUPER+SLASH` persistant |
@@ -81,6 +81,14 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 
 ## Propre au M3 Pro
 
+- **Layout `frmacbook`** (`~/.config/xkb/symbols/frmacbook`) : `fr(mac)` avec
+  Cmd droit = AltGr et Option droite = Super, et les deux touches ISO remises
+  dans l'ordre de leurs étiquettes (`@ #` sous Échap, `< >` à droite de Maj
+  gauche ; le noyau les inverse sur ce clavier, `hid_apple iso_layout` en
+  auto). Session graphique seulement : console et invite LUKS gardent l'ordre
+  du noyau. Après un changement de layout, `omarchy restart xcompose`
+  (relance fcitx5, dont le clavier virtuel garde sinon l'ancien keymap).
+
 - **Veilleuse par shader** : `~/.local/lib/nightlight-shader/hyprsunset` +
   `nightlight-shader.service`. `appledrm` n'a pas de CTM, le vrai hyprsunset
   échoue ; ce démon sert le même socket et teinte via `screen_shader`.
@@ -92,6 +100,13 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
   `systemctl --user mask omarchy-brightness-keyboard-auto.service`.
 
 ## Reste à faire (avec `b-install`)
+
+0. **Fn/Globe <-> Ctrl gauche** : impossible en XKB (Fn est `KEY_FN`, code
+   464, au-delà des 255 codes d'XKB). Seul `hid_apple swap_fn_leftctrl=1`
+   le fait, et `hid_apple` est chargé dans l'initramfs (hooks `modconf` et
+   `keyboard`, avec `/etc/modprobe.d/hid_apple.conf`) : noyau/boot, donc
+   décision du projet OmarchyM3. Si `iso_layout` y est réglé aussi, retirer
+   les deux touches ISO de `frmacbook`, sinon elles s'inversent deux fois.
 
 1. Paquets requis par cette config (installés le 2026-10-24 ; à refaire
    après une réinstallation) :
@@ -110,6 +125,7 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 ```bash
 hyprctl configerrors                        # doit être vide
 hyprctl getoption general:layout            # scrolling
+hyprctl getoption input:kb_layout           # frmacbook
 hyprctl getoption input:kb_options          # caps:escape_shifted_capslock
 hyprctl getoption cursor:no_hardware_cursors  # 1
 omarchy plugin list | grep jvz              # jvz.menu, jvz.tray enabled

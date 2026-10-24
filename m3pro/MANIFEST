@@ -25,6 +25,12 @@
 .config/hypr/input.lua
 .config/hypr/looknfeel.lua
 
+# --- Layout XKB custom (référencé par hypr/input.lua) ---
+# fr(mac) avec Cmd droit <-> Option droite et les deux touches ISO (sous Échap,
+# à droite de Maj gauche) remises dans l'ordre de leurs étiquettes.
+# Sans lui, kb_layout = "frmacbook" ne compile pas et Hyprland retombe sur us.
+.config/xkb/symbols/frmacbook
+
 # --- Scripts appelés par les keybindings (sans eux, les binds sont morts) ---
 .local/bin/hypr-window-full-width
 # SUPER + code:38 — Shazam (nécessite le paquet songrec)

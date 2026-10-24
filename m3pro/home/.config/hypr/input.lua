@@ -6,24 +6,31 @@
 --
 -- Quattro needs custom xkb layouts (frmac, qwertyansi) and
 -- altwin:swap_lalt_lwin to make a QWERTY PC board behave like this one. Here
--- the stock fr(mac) layout already is the target, so none of that applies:
---   - the bottom row already reads Ctrl, Option (Alt), Cmd (Super), Space --
---     the order Quattro gets from swap_lalt_lwin -- so Quattro's bindings land
---     on the same physical keys;
---   - left Option is Alt_L (Mod1), right Option is ISO_Level3_Shift (AltGr:
---     @ # { } [ ] | \ ~), so SUPER+ALT bindings use the left one.
+-- fr(mac) already is the target, so none of that applies:
+--   - the left of the bottom row reads Ctrl, Option (Alt), Cmd (Super),
+--     Space -- the order Quattro gets from swap_lalt_lwin -- so Quattro's
+--     bindings land on the same physical keys;
+--   - left Option is Alt_L (Mod1), so SUPER+ALT bindings use it.
 -- With a single layout there is no layout toggle (Quattro's CTRL+SHIFT+SPACE
 -- and kb-layout-toggle are not carried over).
+--
+-- frmacbook (~/.config/xkb/symbols/frmacbook) is fr(mac) with two changes:
+--   - right Cmd is AltGr (@ # { } [ ] | \ ~) and right Option is Super;
+--   - the key under Escape types @ # and the key right of Left Shift < >,
+--     as printed (the kernel reports the two the wrong way round).
+-- Fn <-> left Ctrl cannot be done here: Fn is evdev KEY_FN (464), past the
+-- 255 keycode ceiling xkb can represent. Only hid_apple's swap_fn_leftctrl
+-- can swap it.
 --
 -- caps:escape_shifted_capslock -> Caps Lock is a second Escape, and
 --                                 Shift+Caps Lock is a real Caps Lock (as on
 --                                 Quattro).
 -- Verify a change with:
---   xkbcli compile-keymap --layout fr --variant mac --options caps:escape_shifted_capslock
+--   xkbcli compile-keymap --layout frmacbook --options caps:escape_shifted_capslock
 hl.config({
   input = {
-    kb_layout = "fr",
-    kb_variant = "mac",
+    kb_layout = "frmacbook",
+    kb_variant = "",
     kb_options = "caps:escape_shifted_capslock",
 
     -- Change speed of keyboard repeat (Omarchy defaults: 40 / 250).
