@@ -8,6 +8,7 @@ ConditionEnvironment=WAYLAND_DISPLAY
 [Service]
 Type=simple
 Environment=NLS_STRENGTH=1.2
+Environment=NLS_DIM=0.8
 ExecStart=%h/.local/lib/nightlight-shader/hyprsunset
 Restart=always
 RestartSec=3
