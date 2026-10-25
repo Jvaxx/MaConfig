@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# Keyboard backlight up/down on a ladder that is fine at the dim end.
+#
+# Stock omarchy-brightness-keyboard steps by a tenth of max_brightness: on this
+# keyboard (255 levels) that is 25 per press, so 0% jumps straight to 9%. The
+# ladder below goes 0, 1, 2, 5, 10 %, then by 10 % up to 100 %. Each stop is
+# rounded up to a raw level, so the OSD (which rounds down) shows the stop.
+#
+#   kbd-brightness up|down
+
+set -euo pipefail
+
+direction=${1:-up}
+stops=(0 1 2 5 10 20 30 40 50 60 70 80 90 100)
+
+device=""
+for candidate in /sys/class/leds/*kbd_backlight*; do
+  if [[ -e $candidate ]]; then
+    device=$(basename "$candidate")
+    break
+  fi
+done
+if [[ -z $device ]]; then
+  echo "No keyboard backlight device found" >&2
+  exit 1
+fi
+
+max=$(brightnessctl -d "$device" max)
+current=$(brightnessctl -d "$device" get)
+
+levels=()
+for pct in "${stops[@]}"; do
+  levels+=($(( (pct * max + 99) / 100 )))
+done
+
+# Next stop above (or below) the current level, so a level set elsewhere
+# (e.g. 25 from the stock script) joins the ladder on the next press.
+new=$current
+if [[ $direction == up ]]; then
+  for level in "${levels[@]}"; do
+    if (( level > current )); then new=$level; break; fi
+  done
+else
+  for (( i = ${#levels[@]} - 1; i >= 0; i-- )); do
+    if (( levels[i] < current )); then new=${levels[i]}; break; fi
+  done
+fi
+
+brightnessctl -d "$device" set "$new" >/dev/null
+omarchy-osd -i keyboard -p "$(( new * 100 / max ))"

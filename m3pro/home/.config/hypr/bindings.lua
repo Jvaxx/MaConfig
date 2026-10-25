@@ -127,3 +127,18 @@ o.bind("SUPER + D", "Restore window width", "omarchy-hyprland-window-width resto
 -- physical key as on Quattro. Plain SUPER on that key was free in stock
 -- Omarchy; SUPER+CTRL+Q keeps its default meaning.
 o.bind("SUPER + code:38", "Identify song playing (Shazam)", "omarchy-shazam")
+
+-- --- Keyboard backlight: fine steps at the dim end --------------------------
+-- Stock omarchy-brightness-keyboard steps by a tenth of max (25/255 here), so
+-- the first press from off lands on 9 %. ~/.local/bin/kbd-brightness walks
+-- 0, 1, 2, 5, 10 %, then 10 % steps. This board has no backlight keys: SHIFT +
+-- the display brightness keys (F1/F2) are the ones in use; the XF86Kbd* keys
+-- are rebound too so no path is left on the coarse steps. Off/cycle stay stock.
+hl.unbind("SHIFT + XF86MonBrightnessUp") -- was: omarchy-brightness-keyboard up
+hl.unbind("SHIFT + XF86MonBrightnessDown") -- was: omarchy-brightness-keyboard down
+hl.unbind("XF86KbdBrightnessUp") -- was: omarchy-brightness-keyboard up
+hl.unbind("XF86KbdBrightnessDown") -- was: omarchy-brightness-keyboard down
+o.bind("SHIFT + XF86MonBrightnessUp", "Keyboard brightness up", "kbd-brightness up", { locked = true, repeating = true })
+o.bind("SHIFT + XF86MonBrightnessDown", "Keyboard brightness down", "kbd-brightness down", { locked = true, repeating = true })
+o.bind("XF86KbdBrightnessUp", "Keyboard brightness up", "kbd-brightness up", { locked = true, repeating = true })
+o.bind("XF86KbdBrightnessDown", "Keyboard brightness down", "kbd-brightness down", { locked = true, repeating = true })

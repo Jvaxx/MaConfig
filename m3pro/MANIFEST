@@ -35,6 +35,8 @@
 .local/bin/hypr-window-full-width
 # SUPER + code:38 — Shazam (nécessite le paquet songrec)
 .local/bin/omarchy-shazam
+# SHIFT + F1/F2 — rétroéclairage clavier par paliers fins (0, 1, 2, 5, 10 %…)
+.local/bin/kbd-brightness
 
 # --- Veilleuse par shader (propre au M3 Pro) ---
 # appledrm n'a pas de CTM : le vrai hyprsunset échoue. Ce démon sert le socket
