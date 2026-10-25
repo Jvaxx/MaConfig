@@ -1,2 +1,4 @@
 [font]
-base-size = 12
+# Shell only (bar, menus, panels). Set here rather than with
+# `omarchy display text size`, so GTK apps and terminals stay at 12px.
+base-size = 14
