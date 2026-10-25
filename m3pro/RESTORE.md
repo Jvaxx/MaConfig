@@ -101,7 +101,7 @@ Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 - **Veilleuse par shader** : `~/.local/lib/nightlight-shader/hyprsunset` +
   `nightlight-shader.service`. `appledrm` n'a pas de CTM, le vrai hyprsunset
   échoue ; ce démon sert le même socket et teinte via `screen_shader`.
-  Installeur et tests : `~/nightlight-shader/`.
+  Tests : `~/nightlight-shader/`.
 - **Skill `b-install`** (`~/.claude/skills/b-install`) : règles d'installation
   de cette machine.
 - `omarchy-brightness-keyboard-auto.service` est masqué (lien vers

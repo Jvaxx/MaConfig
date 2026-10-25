@@ -38,7 +38,7 @@
 
 # --- Veilleuse par shader (propre au M3 Pro) ---
 # appledrm n'a pas de CTM : le vrai hyprsunset échoue. Ce démon sert le socket
-# de hyprsunset et teinte via decoration:screen_shader. Source et installeur :
+# de hyprsunset et teinte via decoration:screen_shader. Tests :
 # ~/nightlight-shader/. L'unité a une section [Install] : restore.sh l'active.
 .local/lib/nightlight-shader/hyprsunset
 .config/systemd/user/nightlight-shader.service
