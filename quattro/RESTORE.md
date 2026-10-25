@@ -242,6 +242,32 @@ Ces trois fichiers sont à la **racine de `$HOME`**, pas dans `.config`.
   chargé via `CLAUDE_CODE_PLUGIN_DIRS`. `node_modules` n'est pas versionné :
   après restauration, `cd ~/.claude/mods/math-render/helper && npm ci`.
 
+## 11. Souris — Logitech G502 HERO (`libratbag`)
+
+Les deux LED (logo = 0, bande DPI = 1) sont en **orange fixe à ~50 %**
+(`803000`) au lieu du cyan respirant d'usine. Le réglage est écrit **dans la
+mémoire de la souris** : rien à restaurer dans `$HOME`, il survit aux
+réinstallations et aux autres machines. À refaire seulement après un reset de
+la souris ou avec une nouvelle.
+
+```bash
+sudo pacman -S libratbag && sudo systemctl enable --now ratbagd
+ratbagctl list                    # nom attribué, ex. thundering-gerbil
+r=thundering-gerbil
+ratbagctl $r profile 1 enable     # indispensable, voir ci-dessous
+ratbagctl $r profile active set 1
+for i in 0 1; do ratbagctl $r led $i set mode on color 803000; done
+```
+
+- **Piège** : d'usine, les 5 profils sont `(disabled)` et la souris tourne sur
+  son profil ROM. `ratbagctl` écrit alors la couleur sans erreur, mais rien ne
+  change : il faut activer le profil 1 pour que la souris le charge.
+- Le profil 1 reprend les réglages d'usine : 1000 Hz, DPI 400/800/1600/2400
+  (1600 par défaut), boutons standard.
+- En mode `on`, pas de luminosité séparée : on assombrit via la couleur
+  (`ff6000` plein, `803000` ~50 %, `401800` ~25 % ; `802000` si ça tire au jaune).
+- `ratbagd` ne sert qu'à modifier les réglages ; on peut le désactiver ensuite.
+
 ## Non sauvegardé volontairement
 
 La liste à jour, avec la raison de chaque exclusion, est dans **`UNTRACKED`**

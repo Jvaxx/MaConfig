@@ -98,6 +98,7 @@ less
 lib32-nvidia-utils
 libpulse
 libqalculate
+libratbag
 libreoffice-fresh
 libsecret
 libva-nvidia-driver
@@ -204,6 +205,7 @@ udiskie
 ufw
 ufw-docker
 umu-launcher
+unrar
 unzip
 usage
 uv
