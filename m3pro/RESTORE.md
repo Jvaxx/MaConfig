@@ -57,9 +57,8 @@ Tests isolés : `python3 -B -m unittest discover -s m3pro/tests -v`.
 | terminaux | `foot.ini` et `ghostty/config` identiques ; **foot est le terminal par défaut** (`xdg-terminals.list`, comme l'écrit `omarchy default terminal foot`), là où Quattro utilise Ghostty ; Ghostty reste installé et configuré. Copier/coller : `SUPER+C` / `SUPER+V` (Cmd+C / Cmd+V), qui envoient Ctrl/Shift+Insert, absents du clavier Mac |
 | `.bashrc` | le bashrc Omarchy (l'image avait laissé celui d'Arch), `alias v.`, direnv protégé par `command -v` |
 | `btop.conf` | celui de cette machine (pas de section GPU dans ce btop) avec `update_ms = 1000` de Quattro |
-| `.claude/settings.json` | celui de Quattro sans le bloc `autoMode` (il décrit le HOME du fixe) |
 | `omarchy-shazam` | identique + message clair si `songrec` manque |
-| partagés | `nvim`, `starship`, `tmux`, `git/config`, `xcompose/personal`, `CLAUDE.md` |
+| partagés | `nvim`, `starship`, `tmux`, `git/config`, `xcompose/personal`, `CLAUDE.md`, `.claude/settings.json` (copie) |
 
 Le helper credential de `shared/.../git/config` est `!gh auth git-credential`
 (résolu par le PATH) : ici `gh` vient de mise, pas de `/usr/bin`.

@@ -100,10 +100,11 @@ shared:.config/tmux/tmux.conf
 shared:.config/git/config
 
 # --- Claude Code (config globale) ---
-# settings.json : celui de Quattro sans le bloc autoMode (décrit le HOME du fixe).
+# settings.json : copie partagée avec Quattro (réécrit par Claude Code). Le
+# sync de chaque hôte l'écrase : committer avant de synchroniser l'autre hôte.
 # math-render : après restauration, (cd helper && npm ci).
 # b-install : règles d'installation propres à cette machine (noyau, GPU, sudo).
 shared:.claude/CLAUDE.md
-copy:.claude/settings.json
+copy:shared:.claude/settings.json
 .claude/mods/math-render
 .claude/skills/b-install

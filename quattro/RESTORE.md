@@ -235,7 +235,8 @@ Ces trois fichiers sont à la **racine de `$HOME`**, pas dans `.config`.
   commit. Sa dernière ligne `@~/.claude/pi.md` importe les consignes de
   délégation Pi, propres à cet hôte et **non sauvegardées** ; sans ce fichier,
   l'import est simplement ignoré.
-- **`settings.json`** (`copy:`, réécrit par Claude Code) : modèle, effort,
+- **`settings.json`** (`copy:shared:`, réécrit par Claude Code, commun avec
+  m3pro ; committer avant de synchroniser l'autre hôte) : modèle, effort,
   auto-compact, thème, attribution désactivée, plugin `frontend-design`. Contient
   aussi la permission `mcp__pi__investigate`, sans effet sans le serveur Pi.
 - **`mods/math-render`** : mod maison (LaTeX rendu en images dans le terminal),

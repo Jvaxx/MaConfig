@@ -131,9 +131,11 @@ shared:.config/git/config
 # --- Claude Code (config globale) ---
 # CLAUDE.md est partagé et importe ~/.claude/pi.md (délégation Pi, propre à
 # cet hôte, non sauvegardée) ; l'import est ignoré là où pi.md n'existe pas.
-# settings.json est réécrit par Claude Code (/config, /model) : copie.
+# settings.json est réécrit par Claude Code (/config, /model) : copie, partagée
+# avec m3pro. Le sync de chaque hôte l'écrase : committer avant de synchroniser
+# l'autre hôte.
 # math-render : mod chargé via CLAUDE_CODE_PLUGIN_DIRS dans settings.json ;
 # node_modules n'est pas versionné, après restauration : (cd helper && npm ci).
 shared:.claude/CLAUDE.md
-copy:.claude/settings.json
+copy:shared:.claude/settings.json
 .claude/mods/math-render
